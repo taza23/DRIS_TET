@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HAFID HOOP | VIP Service & Promo</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;600;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* --- Global Setup --- */
+        :root {
+            --gold: #D4AF37;
+            --gold-light: #FDD835;
+            --dark-bg: #08080a;
+            --glass-bg: rgba(255, 255, 255, 0.03);
+            --text-main: #ffffff;
+            --text-grey: #a0a0a0;
+            --neon-gold: 0 0 25px rgba(212, 175, 55, 0.6);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Cairo', sans-serif;
+            background-color: var(--dark-bg);
+            color: var(--text-main);
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+
+        /* --- Background Animation --- */
+        .bg-animation {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle at 50% 50%, #111 0%, #000 100%);
+            z-index: -1;
+        }
+        .orb {
+            position: absolute; border-radius: 50%; filter: blur(100px); opacity: 0.15;
+            animation: float 20s infinite linear;
+        }
+        .orb-1 { width: 600px; height: 600px; background: var(--gold); top: -200px; right: -100px; }
+        .orb-2 { width: 500px; height: 500px; background: #0051ff; bottom: -150px; left: -100px; animation-delay: -5s; }
+
+        @keyframes float {
+            0% { transform: translate(0, 0) rotate(0deg); }
+            50% { transform: translate(30px, 50px) rotate(10deg); }
+            100% { transform: translate(0, 0) rotate(0deg); }
+        }
+
+        /* --- Header --- */
+        header {
+            position: fixed; top: 0; width: 100%; z-index: 1000;
+            background: rgba(8, 8, 10, 0.85); backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(212, 175, 55, 0.1);
+        }
+        .header-container { max-width: 1300px; margin: 0 auto; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }
+        .logo { font-size: 1.9rem; font-weight: 900; color: var(--gold-light); letter-spacing: 1px; text-transform: uppercase; display: flex; align-items: center; gap: 10px; }
+        nav a { color: #ccc; text-decoration: none; margin-left: 25px; font-weight: 600; transition: 0.3s; }
+        nav a:hover { color: var(--gold); text-shadow: 0 0 10px rgba(212, 175, 55, 0.5); }
+
+        /* --- Hero Section --- */
+        .hero {
+            min-height: 100vh; display: flex; align-items: center; justify-content: center; text-align: center;
+            padding: 100px 20px; position: relative;
+        }
+        .hero-content { max-width: 800px; z-index: 2; }
+        .hero h1 {
+            font-size: 4.5rem; font-weight: 900;
+            background: linear-gradient(to right, #fff, var(--gold-light));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            margin-bottom: 20px; animation: textFade 1.5s ease-out;
+        }
+        .hero p { font-size: 1.3rem; color: #bbb; margin-bottom: 40px; }
+        
+        /* --- Promo Code Box (Updated) --- */
+        .promo-container {
+            background: linear-gradient(135deg, rgba(212, 175, 55, 0.1), rgba(0, 0, 0, 0.6));
+            border: 1px solid var(--gold);
+            padding: 25px 40px; border-radius: 20px;
+            display: inline-flex; align-items: center; gap: 20px;
+            box-shadow: 0 10px 40px rgba(212, 175, 55, 0.2);
+            margin-bottom: 30px; position: relative; overflow: hidden;
+            animation: pulseBorder 3s infinite;
+        }
+        .promo-label { text-align: right; }
+        .promo-label h4 { color: var(--gold-light); font-size: 1.1rem; margin-bottom: 5px; }
+        .promo-label span { font-size: 0.9rem; color: #fff; background: #ff0055; padding: 2px 10px; border-radius: 4px; font-weight: bold; }
+        
+        .promo-code-box {
+            background: #000; padding: 10px 25px; border-radius: 10px; border: 1px dashed #555;
+            display: flex; align-items: center; gap: 15px;
+        }
+        #promoCode { font-size: 1.8rem; font-weight: 900; color: #fff; letter-spacing: 2px; font-family: monospace; }
+        .copy-btn { background: var(--gold); color: #000; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-weight: 800; transition: 0.2s; }
+        .copy-btn:active { transform: scale(0.95); }
+        
+        /* Toast Notification */
+        .toast {
+            visibility: hidden; min-width: 250px; background-color: #333; color: #fff;
+            text-align: center; border-radius: 10px; padding: 12px; position: fixed;
+            z-index: 2000; left: 50%; bottom: 30px; transform: translateX(-50%);
+            font-size: 1rem; border: 1px solid var(--gold);
+        }
+        .toast.show { visibility: visible; animation: fadein 0.5s, fadeout 0.5s 2.5s; }
+
+        @keyframes fadein { from {bottom: 0; opacity: 0;} to {bottom: 30px; opacity: 1;} }
+        @keyframes fadeout { from {bottom: 30px; opacity: 1;} to {bottom: 0; opacity: 0;} }
+        @keyframes pulseBorder {
+            0%, 100% { box-shadow: 0 0 20px rgba(212, 175, 55, 0.2); }
+            50% { box-shadow: 0 0 40px rgba(212, 175, 55, 0.5); }
+        }
+
+        /* --- Platforms Section (Updated for 2 Cards) --- */
+        .section { padding: 100px 20px; max-width: 1300px; margin: 0 auto; }
+        .section-title { text-align: center; font-size: 2.8rem; color: #fff; margin-bottom: 20px; font-weight: 800; }
+        .section-title span { color: var(--gold); }
+        .section-desc { text-align: center; color: #777; margin-bottom: 60px; max-width: 600px; margin-left: auto; margin-right: auto; }
+
+        /* Centering the 2 cards */
+        .grid-wrapper {
+            display: flex; justify-content: center; gap: 30px;
+            flex-wrap: wrap;
+        }
+        
+        .glass-card {
+            background: var(--glass-bg);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 24px; padding: 40px 30px;
+            backdrop-filter: blur(10px);
+            transition: 0.4s; position: relative; overflow: hidden;
+            width: 100%; max-width: 400px; /* Fixed width for elegance */
+            text-align: center;
+        }
+        .glass-card:hover { transform: translateY(-10px); border-color: rgba(212, 175, 55, 0.3); box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
+        
+        /* Image Styling */
+        .platform-logo {
+            width: 100%; max-width: 200px; height: auto; 
+            margin-bottom: 25px; 
+            filter: drop-shadow(0 5px 15px rgba(0,0,0,0.5));
+            transition: 0.3s;
+        }
+        .glass-card:hover .platform-logo { transform: scale(1.05); }
+
+        .card-title { font-size: 1.5rem; margin-bottom: 15px; color: #fff; font-weight: 800; }
+        .card-text { color: #aaa; font-size: 0.95rem; margin-bottom: 20px; }
+
+        /* Withdraw Section */
+        .withdraw-feature {
+            background: linear-gradient(90deg, #111, #1a1400);
+            border-radius: 30px; padding: 60px;
+            display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            margin: 60px 0;
+        }
+        .withdraw-content h3 { font-size: 2.5rem; color: var(--gold); margin-bottom: 15px; }
+        .withdraw-content p { color: #ccc; font-size: 1.1rem; max-width: 500px; }
+
+        /* Payments */
+        .payment-grid { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; }
+        .pay-pill { background: rgba(255,255,255,0.05); padding: 15px 30px; border-radius: 50px; border: 1px solid #333; color: #fff; font-weight: 600; transition: 0.3s; }
+        .pay-pill:hover { background: var(--gold); color: #000; border-color: var(--gold); }
+        
+        .voucher-box {
+            text-align: center; margin-top: 60px; padding: 50px;
+            background: radial-gradient(circle at center, rgba(255, 0, 128, 0.1), transparent);
+            border: 1px solid rgba(255, 0, 128, 0.3); border-radius: 20px;
+        }
+        .voucher-box h3 { font-size: 2rem; margin-bottom: 20px; }
+
+        /* Footer */
+        footer { text-align: center; padding: 80px 20px; background: #050505; border-top: 1px solid #111; }
+        .cta-box { background: #111; padding: 50px; border-radius: 20px; border: 1px solid #222; max-width: 700px; margin: 0 auto; }
+        .phone-lg { font-size: 2.8rem; font-weight: 900; color: var(--gold-light); margin: 20px 0; display: block; text-decoration: none; }
+        .btn-wa { background: #25D366; color: #fff; padding: 18px 50px; border-radius: 50px; font-size: 1.3rem; font-weight: 800; text-decoration: none; display: inline-block; margin-top: 20px; box-shadow: 0 0 30px rgba(37, 211, 102, 0.3); }
+        
+        @media (max-width: 768px) {
+            .hero h1 { font-size: 2.8rem; }
+            .promo-container { flex-direction: column; padding: 20px; }
+            .withdraw-feature { padding: 30px; text-align: center; flex-direction: column; }
+            .glass-card { max-width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="toast" class="toast">تم نسخ الكود بنجاح!</div>
+
+    <!-- Animated Background -->
+    <div class="bg-animation">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+    </div>
+
+    <!-- Navigation -->
+    <header>
+        <div class="header-container">
+            <div class="logo"><i class="fas fa-crown"></i> HAFID HOOP</div>
+            <nav>
+                <a href="#home">الرئيسية</a>
+                <a href="#partners">المنصات</a>
+                <a href="#withdraw">السحب</a>
+                <a href="#contact">اتصل بنا</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero" id="home">
+        <div class="hero-content">
+            <h1>مركز الثقة والخدمات المالية</h1>
+            <p>نوفر لك أفضل تجربة شحن وسحب آمنة وسريعة لأكبر المنصات العالمية.</p>
+
+            <!-- Promo Code Component -->
+            <div class="promo-container">
+                <div class="promo-label">
+                    <h4>كود خصم حصري</h4>
+                    <span>مكافأة 200% على الشحن</span>
+                </div>
+                <div class="promo-code-box">
+                    <span id="promoCode">EHAFID</span>
+                    <button class="copy-btn" onclick="copyCode()">
+                        <i class="far fa-copy"></i> نسخ
+                    </button>
+                </div>
+            </div>
+            <!-- End Promo -->
+
+            <a href="https://wa.me/212607398913" class="btn-wa" style="background: var(--gold); color: #000; box-shadow: var(--neon-gold);">
+                <i class="fab fa-whatsapp"></i> تواصل لتفعيل الكود
+            </a>
+        </div>
+    </section>
+
+    <!-- Partners Section -->
+    <section class="section" id="partners">
+        <h2 class="section-title">شركاء <span>النجاح</span></h2>
+        <p class="section-desc">نحن وكيل معتمد لأكبر شركات المراهنات، نضمن لك حقوقك ونوفر لك أفضل الأسعار.</p>
+
+        <div class="grid-wrapper">
+            <!-- Melbet Card (Updated Image) -->
+            <div class="glass-card">
+                <img src="https://v3.traincdn.com/genfiles/cms/8-62/desktop/media_asset/dd77c8f1b5bd23e38cd81fb7d861af10.svg" alt="Melbet" class="platform-logo">
+                <h3 class="card-title">Melbet</h3>
+                <p class="card-text">شحن وسحب فوري لجميع حسابات ميل بت مع دعم فني متواصل وسرعة في الإنجاز.</p>
+            </div>
+
+            <!-- Mega Pari Card (Updated Image) -->
+            <div class="glass-card">
+                <img src="https://v3.traincdn.com/genfiles/cms/192-2363/desktop/media_asset/90521e8aa84a3b66458b3c8e47c2d512.svg" alt="Mega Pari" class="platform-logo">
+                <h3 class="card-title">Mega Pari</h3>
+                <p class="card-text">أفضل المنصات الرياضية، ادعم حسابك معنا واحصل على أفضل تجربة تداول.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Withdraw Feature -->
+    <section class="section" id="withdraw">
+        <div class="withdraw-feature">
+            <div class="withdraw-content">
+                <h3><i class="fas fa-gem"></i> خدمة السحب الماسي</h3>
+                <p>استلم أرباحك بكل فخر. نحن نقدم الأسرع والأضمن في تحويل أرباحك إلى حسابك البنكي أو محفظتك الإلكترونية. ثقة لا تُضاهى.</p>
+            </div>
+            <div style="text-align: center;">
+                <i class="fas fa-hand-holding-usd" style="font-size: 8rem; color: var(--gold); opacity: 0.8;"></i>
+            </div>
+        </div>
+
+        <!-- Payment Methods -->
+        <div style="text-align: center;">
+            <h3 class="section-title" style="font-size: 1.8rem;">طرق الدفع المتاحة</h3>
+            <div class="payment-grid">
+                <div class="pay-pill"><i class="fas fa-university"></i> CIH Bank</div>
+                <div class="pay-pill"><i class="fas fa-envelope"></i> Barid Bank</div>
+                <div class="pay-pill"><i class="fas fa-wallet"></i> CashPlus</div>
+            </div>
+        </div>
+
+        <!-- Vouchers -->
+        <div class="voucher-box">
+            <h3>تعبئة بالقسائم <i class="fas fa-ticket-alt"></i></h3>
+            <p>إمكانية الشحن عبر قسائم التعبئة الرقمية بسهولة تامة.</p>
+            <div style="margin-top: 20px; display: flex; justify-content: center; gap: 15px;">
+                <span class="pay-pill" style="background: #ff9800; border: none;">INWI</span>
+                <span class="pay-pill" style="background: #ff5500; border: none;">ORANGE</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer / Contact -->
+    <footer id="contact">
+        <div class="cta-box">
+            <h2 style="font-size: 2rem;">جاهز للبدء؟</h2>
+            <p>تواصل معنا الآن لتفعيل كود الخصم EHAFID والاستفادة من العرض.</p>
+            
+            <a href="tel:0607398913" class="phone-lg">0607398913</a>
+            
+            <a href="https://wa.me/212607398913" class="btn-wa">
+                <i class="fab fa-whatsapp"></i> اضغط للتواصل
+            </a>
+        </div>
+        <p style="margin-top: 40px; color: #444;">© 2023 HAFID HOOP. All Rights Reserved.</p>
+    </footer>
+
+    <!-- Script for Copy & Toast -->
+    <script>
+        function copyCode() {
+            var copyText = document.getElementById("promoCode").innerText;
+            navigator.clipboard.writeText(copyText);
+            
+            // Show Toast
+            var x = document.getElementById("toast");
+            x.className = "toast show";
+            setTimeout(function(){ x.className = x.className.replace("show", ""); }, 3000);
+        }
+    </script>
+
+</body>
+</html>
