@@ -1,0 +1,19 @@
+name: LIVE_NOW
+on:
+  workflow_dispatch:
+    inputs:
+      video_url:
+        description: 'رابط الفيديو'
+        required: true
+      fb_key:
+        description: 'كود فيسبوك'
+        required: true
+
+jobs:
+  streaming:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Start
+        run: |
+          sudo apt update && sudo apt install ffmpeg -y
+          ffmpeg -re -i "${{ github.event.inputs.video_url }}" -c:v libx264 -preset superfast -b:v 2000k -c:a aac -f flv "rtmps://live-api-s.facebook.com:443/rtmp/${{ github.event.inputs.fb_key }}"
