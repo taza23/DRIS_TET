@@ -1,19 +1,38 @@
-name: LIVE_NOW
+name: AUTO_RESTART_STREAM
 on:
   workflow_dispatch:
     inputs:
       video_url:
-        description: 'رابط الفيديو'
+        description: 'رابط m3u8'
         required: true
       fb_key:
-        description: 'كود فيسبوك'
+        description: 'Stream Key'
         required: true
 
 jobs:
   streaming:
     runs-on: ubuntu-latest
     steps:
-      - name: Start
+      - name: Install FFmpeg
+        run: sudo apt update && sudo apt install ffmpeg -y
+
+      - name: Infinite Stream Loop
         run: |
-          sudo apt update && sudo apt install ffmpeg -y
-          ffmpeg -re -i "${{ github.event.inputs.video_url }}" -c:v libx264 -preset superfast -b:v 2000k -c:a aac -f flv "rtmps://live-api-s.facebook.com:443/rtmp/${{ github.event.inputs.fb_key }}"
+          # رابط اللوجو (تقدر تبدلو برابط PNG ديالك)
+          LOGO="https://files.catbox.moe/u12fx2.png"
+          
+          echo "🚀 بدات عملية البث الذكية..."
+          
+          # هاد الحلقة (while true) غتخلي البث يتعاود للأبد
+          while true; do
+            echo "🎬 طلاق البث دابا..."
+            
+            ffmpeg -re -i "${{ github.event.inputs.video_url }}" -i "$LOGO" \
+            -filter_complex "[1:v]scale=100:-1[logo];[0:v][logo]overlay=(W-w)/2:20" \
+            -c:v libx264 -preset superfast -b:v 2500k \
+            -c:a aac -ar 44100 -f flv \
+            "rtmps://live-api-s.facebook.com:443/rtmp/${{ github.event.inputs.fb_key }}"
+            
+            echo "⚠️ البث طاح! غنعاود نطلقو بعد 5 ثواني..."
+            sleep 5
+          done
