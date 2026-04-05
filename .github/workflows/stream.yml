@@ -1,39 +1,36 @@
-name: 🚀 FOOT_LIVE_PRO_DASHBOARD
+name: AUTO_RESTART_STREAM
 on:
   workflow_dispatch:
     inputs:
       video_url:
-        description: 'رابط m3u8 (الرابط ديال الماتش)'
+        description: 'رابط m3u8'
         required: true
       fb_key:
-        description: 'Stream Key (Facebook Live)'
+        description: 'Stream Key'
         required: true
 
 jobs:
   streaming:
     runs-on: ubuntu-latest
     steps:
-      - name: Setup FFmpeg & Fonts
-        run: |
-          sudo apt update
-          sudo apt install ffmpeg fonts-dejavu-core -y
+      - name: Install FFmpeg & Fonts
+        run: sudo apt update && sudo apt install ffmpeg fonts-freefont-ttf -y
 
-      - name: Stream with Scrolling Text "FOOT LIVE"
+      - name: Infinite Stream Loop
         run: |
-          echo "🎬 البث المباشر بدأ... الشاشة صافية + علامة مائية كدوز"
+          LOGO=""
           
-          # حلقة باش البث يعاود راسو أوطوماتيك إيلا طاح
+          echo "🚀 بدات عملية البث الذكية مع اللوجو والنص المتحرك..."
+          
           while true; do
-            # كود FFmpeg مع فلتر drawtext لتحريك النص "FOOT LIVE"
-            # السرعة محددة بـ t*200 (200 بيكسل فالثانية)
-            # ي=ه-ه-20 (20 بيكسل فوق من لتحت ديال الشاشة)
-            ffmpeg -re -i "${{ github.event.inputs.video_url }}" \
-            -vf "drawtext=text='FOOT LIVE':fontfile=/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf:fontsize=36:fontcolor=white:box=1:boxcolor=black@0.6:y=H-h-20:x=W-mod(t*200\,W+tw)" \
+            echo "🎬 طلاق البث دابا..."
+            
+            ffmpeg -re -i "${{ github.event.inputs.video_url }}" -i "$LOGO" \
+            -filter_complex "[1:v]scale=100:-1[logo];[0:v][logo]overlay=(W-w)/2:20[v1];[v1]drawtext=fontfile=/usr/share/fonts/truetype/freefont/FreeSansBold.ttf:text=' FOOT LIVE ':fontcolor=white:fontsize=45:x=W-mod(t*150\,W+tw):y=H-th-20:shadowcolor=black:shadowx=2:shadowy=2" \
             -c:v libx264 -preset superfast -b:v 2500k \
             -c:a aac -ar 44100 -f flv \
             "rtmps://live-api-s.facebook.com:443/rtmp/${{ github.event.inputs.fb_key }}"
             
-            echo "⚠️ مشكل فالسيرفر، إعادة المحاولة بعد 5 ثواني..."
+            echo "⚠️ البث طاح! غنعاود نطلقو بعد 5 ثواني..."
             sleep 5
           done
-          
