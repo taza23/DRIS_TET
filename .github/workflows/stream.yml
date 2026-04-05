@@ -1,36 +1,38 @@
-name: AUTO_RESTART_STREAM
+Name: AUTO_RESTART_STREAM
 on:
   workflow_dispatch:
     inputs:
       video_url:
-        description: 'رابط m3u8 (المنبع)'
+        description: 'رابط m3u8'
         required: true
       fb_key:
-        description: 'Stream Key (Facebook)'
+        description: 'Stream Key'
         required: true
 
 jobs:
   streaming:
     runs-on: ubuntu-latest
     steps:
-      - name: Install FFmpeg & Fonts
-        run: |
-          sudo apt update
-          sudo apt install ffmpeg fonts-freefont-ttf -y
+      - name: Install FFmpeg
+        run: sudo apt update && sudo apt install ffmpeg -y
 
       - name: Infinite Stream Loop
         run: |
-          echo "🚀 انطلاق البث بأخف إعدادات ممكنة..."
+          # رابط اللوجو (تقدر تبدلو برابط PNG ديالك)
+          LOGO="https://files.catbox.moe/u12fx2.png"
           
+          echo "🚀 بدات عملية البث الذكية..."
+          
+          # هاد الحلقة (while true) غتخلي البث يتعاود للأبد
           while true; do
-            echo "🎬 البث خدام دابا..."
+            echo "🎬 طلاق البث دابا..."
             
-            ffmpeg -re -i "${{ github.event.inputs.video_url }}" \
-            -vf "drawtext=fontfile=/usr/share/fonts/truetype/freefont/FreeSansBold.ttf:text=' FOOT LIVE ':fontcolor=white:fontsize=40:x=W-mod(t*120\,W+tw):y=H-th-30:shadowcolor=black:shadowx=2:shadowy=2" \
-            -c:v libx264 -preset ultrafast -tune zerolatency -b:v 1800k -maxrate 1800k -bufsize 3600k \
-            -c:a aac -ar 44100 -b:a 128k -f flv \
+            ffmpeg -re -i "${{ github.event.inputs.video_url }}" -i "$LOGO" \
+            -filter_complex "[1:v]scale=100:-1[logo];[0:v][logo]overlay=(W-w)/2:20" \
+            -c:v libx264 -preset superfast -b:v 2500k \
+            -c:a aac -ar 44100 -f flv \
             "rtmps://live-api-s.facebook.com:443/rtmp/${{ github.event.inputs.fb_key }}"
             
-            echo "⚠️ البث توقف! إعادة المحاولة بعد 5 ثوانٍ..."
+            echo "⚠️ البث طاح! غنعاود نطلقو بعد 5 ثواني..."
             sleep 5
           done
