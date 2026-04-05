@@ -1,38 +1,39 @@
-name: AUTO_RESTART_STREAM
+name: 🚀 FOOT_LIVE_PRO_DASHBOARD
 on:
   workflow_dispatch:
     inputs:
       video_url:
-        description: 'رابط m3u8'
+        description: 'رابط m3u8 (الرابط ديال الماتش)'
         required: true
       fb_key:
-        description: 'Stream Key'
+        description: 'Stream Key (Facebook Live)'
         required: true
 
 jobs:
   streaming:
     runs-on: ubuntu-latest
     steps:
-      - name: Install FFmpeg
-        run: sudo apt update && sudo apt install ffmpeg -y
-
-      - name: Infinite Stream Loop
+      - name: Setup FFmpeg & Fonts
         run: |
-          # رابط اللوجو (تقدر تبدلو برابط PNG ديالك)
-          LOGO="https://files.catbox.moe/u12fx2.png"
+          sudo apt update
+          sudo apt install ffmpeg fonts-dejavu-core -y
+
+      - name: Stream with Scrolling Text "FOOT LIVE"
+        run: |
+          echo "🎬 البث المباشر بدأ... الشاشة صافية + علامة مائية كدوز"
           
-          echo "🚀 بدات عملية البث الذكية..."
-          
-          # هاد الحلقة (while true) غتخلي البث يتعاود للأبد
+          # حلقة باش البث يعاود راسو أوطوماتيك إيلا طاح
           while true; do
-            echo "🎬 طلاق البث دابا..."
-            
-            ffmpeg -re -i "${{ github.event.inputs.video_url }}" -i "$LOGO" \
-            -filter_complex "[1:v]scale=100:-1[logo];[0:v][logo]overlay=(W-w)/2:20" \
+            # كود FFmpeg مع فلتر drawtext لتحريك النص "FOOT LIVE"
+            # السرعة محددة بـ t*200 (200 بيكسل فالثانية)
+            # ي=ه-ه-20 (20 بيكسل فوق من لتحت ديال الشاشة)
+            ffmpeg -re -i "${{ github.event.inputs.video_url }}" \
+            -vf "drawtext=text='FOOT LIVE':fontfile=/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf:fontsize=36:fontcolor=white:box=1:boxcolor=black@0.6:y=H-h-20:x=W-mod(t*200\,W+tw)" \
             -c:v libx264 -preset superfast -b:v 2500k \
             -c:a aac -ar 44100 -f flv \
             "rtmps://live-api-s.facebook.com:443/rtmp/${{ github.event.inputs.fb_key }}"
             
-            echo "⚠️ البث طاح! غنعاود نطلقو بعد 5 ثواني..."
+            echo "⚠️ مشكل فالسيرفر، إعادة المحاولة بعد 5 ثواني..."
             sleep 5
           done
+          
