@@ -3,10 +3,10 @@ on:
   workflow_dispatch:
     inputs:
       video_url:
-        description: 'رابط m3u8'
+        description: 'رابط m3u8 (المنبع)'
         required: true
       fb_key:
-        description: 'Stream Key'
+        description: 'Stream Key (Facebook)'
         required: true
 
 jobs:
@@ -14,21 +14,23 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Install FFmpeg & Fonts
-        run: sudo apt update && sudo apt install ffmpeg fonts-freefont-ttf -y
+        run: |
+          sudo apt update
+          sudo apt install ffmpeg fonts-freefont-ttf -y
 
       - name: Infinite Stream Loop
         run: |
-          echo "🚀 بدات عملية البث الذكية مع النص المتحرك (بدون لوجو)..."
+          echo "🚀 انطلاق البث بأخف إعدادات ممكنة..."
           
           while true; do
-            echo "🎬 طلاق البث دابا..."
+            echo "🎬 البث خدام دابا..."
             
             ffmpeg -re -i "${{ github.event.inputs.video_url }}" \
-            -vf "drawtext=fontfile=/usr/share/fonts/truetype/freefont/FreeSansBold.ttf:text='   FOOT LIVE   ':fontcolor=white:fontsize=45:x=W-mod(t*150\,W+tw):y=H-th-20:shadowcolor=black:shadowx=2:shadowy=2" \
-            -c:v libx264 -preset superfast -b:v 2500k \
-            -c:a aac -ar 44100 -f flv \
+            -vf "drawtext=fontfile=/usr/share/fonts/truetype/freefont/FreeSansBold.ttf:text=' FOOT LIVE ':fontcolor=white:fontsize=40:x=W-mod(t*120\,W+tw):y=H-th-30:shadowcolor=black:shadowx=2:shadowy=2" \
+            -c:v libx264 -preset ultrafast -tune zerolatency -b:v 1800k -maxrate 1800k -bufsize 3600k \
+            -c:a aac -ar 44100 -b:a 128k -f flv \
             "rtmps://live-api-s.facebook.com:443/rtmp/${{ github.event.inputs.fb_key }}"
             
-            echo "⚠️ البث طاح! غنعاود نطلقو بعد 5 ثواني..."
+            echo "⚠️ البث توقف! إعادة المحاولة بعد 5 ثوانٍ..."
             sleep 5
           done
