@@ -1,4 +1,4 @@
-Name: AUTO_RESTART_STREAM
+name: AUTO_RESTART_STREAM
 on:
   workflow_dispatch:
     inputs:
