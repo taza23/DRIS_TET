@@ -13,22 +13,18 @@ jobs:
   streaming:
     runs-on: ubuntu-latest
     steps:
-      - name: Install FFmpeg
-        run: sudo apt update && sudo apt install ffmpeg -y
+      - name: Install FFmpeg & Fonts
+        run: sudo apt update && sudo apt install ffmpeg fonts-freefont-ttf -y
 
       - name: Infinite Stream Loop
         run: |
-          # رابط اللوجو (تقدر تبدلو برابط PNG ديالك)
-          LOGO="https://files.catbox.moe/u12fx2.png"
+          echo "🚀 بدات عملية البث الذكية مع النص المتحرك (بدون لوجو)..."
           
-          echo "🚀 بدات عملية البث الذكية..."
-          
-          # هاد الحلقة (while true) غتخلي البث يتعاود للأبد
           while true; do
             echo "🎬 طلاق البث دابا..."
             
-            ffmpeg -re -i "${{ github.event.inputs.video_url }}" -i "$LOGO" \
-            -filter_complex "[1:v]scale=100:-1[logo];[0:v][logo]overlay=(W-w)/2:20" \
+            ffmpeg -re -i "${{ github.event.inputs.video_url }}" \
+            -vf "drawtext=fontfile=/usr/share/fonts/truetype/freefont/FreeSansBold.ttf:text='   FOOT LIVE   ':fontcolor=white:fontsize=45:x=W-mod(t*150\,W+tw):y=H-th-20:shadowcolor=black:shadowx=2:shadowy=2" \
             -c:v libx264 -preset superfast -b:v 2500k \
             -c:a aac -ar 44100 -f flv \
             "rtmps://live-api-s.facebook.com:443/rtmp/${{ github.event.inputs.fb_key }}"
@@ -36,4 +32,3 @@ jobs:
             echo "⚠️ البث طاح! غنعاود نطلقو بعد 5 ثواني..."
             sleep 5
           done
-
