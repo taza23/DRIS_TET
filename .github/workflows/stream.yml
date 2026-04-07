@@ -1,34 +1,178 @@
-name: AUTO_RESTART_STREAM
+name: 🔴 Pro Live Stream Controller (MPD Edition)
+
 on:
   workflow_dispatch:
     inputs:
       video_url:
-        description: 'رابط m3u8'
+        description: '🔗 الرابط الأساسي (رابط موقع لاستخراج MPD، أو رابط مباشر)'
         required: true
+        type: string
+      backup_url:
+        description: '🔄 الرابط الاحتياطي'
+        required: false
+        type: string
       fb_key:
-        description: 'Stream Key'
+        description: '🔑 مفتاح بث Facebook'
         required: true
+        type: string
+      user_agent:
+        description: '🕵️‍♂️ User-Agent (لتخطي الحظر وجلب MPD)'
+        required: false
+        default: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+        type: string
+      referer:
+        description: '🔗 Referer (مهم جداً لروابط MPD الرياضية)'
+        required: false
+        type: string
+      extra_rtmp:
+        description: '🚀 منصة إضافية (YouTube RTMP) - اختياري'
+        required: false
+        type: string
+      resolution:
+        description: '📺 الجودة (Resolution)'
+        required: true
+        type: choice
+        options:
+          - '1280:720'
+          - '1920:1080'
+        default: '1280:720'
+      fps:
+        description: '🎞️ الفريمات (FPS)'
+        required: true
+        default: '30'
+        type: choice
+        options:
+          - '30'
+          - '60'
+      bitrate:
+        description: '📡 البت ريت (مثال: 2500k)'
+        required: true
+        default: '2500k'
+        type: string
+      volume:
+        description: '🔊 مستوى الصوت'
+        required: true
+        default: '1.0'
+        type: string
+      enable_text:
+        description: '📝 تفعيل النص المتحرك؟'
+        required: true
+        type: boolean
+        default: false
+      overlay_text:
+        description: '💬 النص المتحرك'
+        required: false
+        default: 'Live Stream - Developer Chafik'
+        type: string
 
 jobs:
-  streaming:
+  stream:
+    name: 🚀 Broadcasting with MPD Extractor...
     runs-on: ubuntu-latest
-    steps:
-      - name: Install FFmpeg & Fonts
-        run: sudo apt update && sudo apt install ffmpeg fonts-freefont-ttf -y
 
-      - name: Infinite Stream Loop
+    steps:
+      - name: 🛠️ Setup Environment
         run: |
-          echo "🚀 بدات عملية البث الذكية مع النص المتحرك (بدون لوجو)..."
-          
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg curl jq fonts-dejavu-core python3-pip
+          # تثبيت أحدث إصدار من yt-dlp لاستخراج الـ MPD
+          sudo curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o /usr/local/bin/yt-dlp
+          sudo chmod a+rx /usr/local/bin/yt-dlp
+
+      - name: 🔴 Start MPD Smart Stream Engine
+        env:
+          PRIMARY_URL: ${{ inputs.video_url }}
+          BACKUP_URL: ${{ inputs.backup_url }}
+          FB_KEY: ${{ inputs.fb_key }}
+          UA: ${{ inputs.user_agent }}
+          REF: ${{ inputs.referer }}
+          EXTRA_RTMP: ${{ inputs.extra_rtmp }}
+          RES: ${{ inputs.resolution }}
+          FPS: ${{ inputs.fps }}
+          BITRATE: ${{ inputs.bitrate }}
+          VOLUME: ${{ inputs.volume }}
+          ENABLE_TEXT: ${{ inputs.enable_text }}
+          TEXT_VAL: ${{ inputs.overlay_text }}
+        run: |
+          echo "================================================="
+          echo "🔥 MPD Smart Stream Engine by Hacker Chafik 🔥"
+          echo "================================================="
+
+          FONT_PATH="/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
+
+          # تجهيز Headers لـ FFmpeg
+          FF_HEADERS=""
+          if [ -n "$UA" ]; then
+            FF_HEADERS="-user_agent \"$UA\""
+          fi
+          if [ -n "$REF" ]; then
+            FF_HEADERS="$FF_HEADERS -headers \"Referer: $REF\""
+          fi
+
+          # بناء الفلاتر
+          V_FILTER="scale=${RES},eq=contrast=1.05:saturation=1.1"
+          if [ "$ENABLE_TEXT" = "true" ]; then
+            V_FILTER="${V_FILTER},drawtext=fontfile=${FONT_PATH}:text='${TEXT_VAL}':fontcolor=white:fontsize=28:box=1:boxcolor=black@0.6:boxborderw=10:x=w-mod(t*120\,w+tw):y=h-60"
+          fi
+          F_COMPLEX="[0:v]${V_FILTER}[v_out];[0:a]volume=${VOLUME},loudnorm[a_out]"
+
+          # إعداد المخرجات
+          FB_RTMP="rtmps://live-api-s.facebook.com:443/rtmp/${FB_KEY}"
+          if [ -n "$EXTRA_RTMP" ]; then
+            OUTPUT_CMD="-f tee -map [v_out] -map [a_out] \"[f=flv]${FB_RTMP}|[f=flv]${EXTRA_RTMP}\""
+          else
+            OUTPUT_CMD="-f flv -map [v_out] -map [a_out] \"${FB_RTMP}\""
+          fi
+
+          # 🎯 محرك استخراج MPD / M3U8
+          get_real_url() {
+            local raw_url=$1
+            
+            # إذا كان الرابط مباشراً (ينتهي بـ mpd أو m3u8) نعطيه مباشرة لـ ffmpeg
+            if [[ "$raw_url" == *".mpd"* ]] || [[ "$raw_url" == *".m3u8"* ]]; then
+              echo "$raw_url"
+            else
+              echo "🕵️‍♂️ Extracting MPD/M3U8 from website..." >&2
+              # استخدام yt-dlp للبحث عن ملف Manifest المخفي داخل الموقع
+              extracted=$(yt-dlp --allow-unplayable-formats --no-warnings -f "best" -g "$raw_url" --user-agent "$UA" --referer "$REF" 2>/dev/null)
+              
+              if [ -n "$extracted" ]; then
+                echo "$extracted"
+              else
+                echo "$raw_url"
+              fi
+            fi
+          }
+
+          # حلقة البث اللانهائية
           while true; do
-            echo "🎬 طلاق البث دابا..."
+            echo "🔄 Resolving Primary URL..."
+            CURRENT_STREAM=$(get_real_url "$PRIMARY_URL")
+            echo "🎯 Target URL: $CURRENT_STREAM"
             
-            ffmpeg -re -i "${{ github.event.inputs.video_url }}" \
-            -vf "drawtext=fontfile=/usr/share/fonts/truetype/freefont/FreeSansBold.ttf:text='   FOOT LIVE   ':fontcolor=white:fontsize=45:x=W-mod(t*150\,W+tw):y=H-th-20:shadowcolor=black:shadowx=2:shadowy=2" \
-            -c:v libx264 -preset superfast -b:v 2500k \
-            -c:a aac -ar 44100 -f flv \
-            "rtmps://live-api-s.facebook.com:443/rtmp/${{ github.event.inputs.fb_key }}"
-            
-            echo "⚠️ البث طاح! غنعاود نطلقو بعد 5 ثواني..."
+            echo "▶️ Starting Primary Stream..."
+            # تنفيذ FFmpeg مع تمرير الـ Headers (باستخدام eval لتمرير المتغيرات بشكل صحيح)
+            eval ffmpeg -hide_banner -loglevel warning -re $FF_HEADERS -i \"$CURRENT_STREAM\" \
+              -filter_complex \"$F_COMPLEX\" \
+              -c:v libx264 -preset veryfast -profile:v high -b:v $BITRATE -maxrate $BITRATE -bufsize $(( ${BITRATE//k/} * 2 ))k -g $(( $FPS * 2 )) -r $FPS \
+              -c:a aac -b:a 128k -ar 44100 \
+              $OUTPUT_CMD
+
+            echo "⚠️ Primary Stream Dropped!"
+
+            if [ -n "$BACKUP_URL" ]; then
+              echo "🔄 Switching to Backup URL..."
+              BACKUP_STREAM=$(get_real_url "$BACKUP_URL")
+              
+              eval ffmpeg -hide_banner -loglevel warning -re $FF_HEADERS -i \"$BACKUP_STREAM\" \
+                -filter_complex \"$F_COMPLEX\" \
+                -c:v libx264 -preset veryfast -profile:v high -b:v $BITRATE -maxrate $BITRATE -bufsize $(( ${BITRATE//k/} * 2 ))k -g $(( $FPS * 2 )) -r $FPS \
+                -c:a aac -b:a 128k -ar 44100 \
+                $OUTPUT_CMD
+              
+              echo "⚠️ Backup Stream Dropped! Retrying Primary..."
+            fi
+
+            echo "⏳ Waiting 5 seconds before reconnecting..."
             sleep 5
           done
