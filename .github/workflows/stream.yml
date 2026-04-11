@@ -1,10 +1,9 @@
-name: 🔴 Pro Live Stream Controller (MPD Edition)
-
+name: Stream Engine
 on:
   workflow_dispatch:
     inputs:
       video_url:
-        description: '🔗 الرابط الأساسي (رابط موقع لاستخراج MPD، أو رابط مباشر)'
+        description: '🔗 الرابط الأساسي (رابط موقع لاستخراج MPD/M3U8، أو رابط مباشر)'
         required: true
         type: string
       backup_url:
@@ -67,19 +66,19 @@ on:
 
 jobs:
   stream:
-    name: 🚀 Broadcasting with MPD Extractor...
+    name: 🚀 ALFA TECH Broadcasting Engine...
     runs-on: ubuntu-latest
 
     steps:
       - name: 🛠️ Setup Environment
         run: |
           sudo apt-get update
-          sudo apt-get install -y ffmpeg curl jq fonts-dejavu-core python3-pip
-          # تثبيت أحدث إصدار من yt-dlp لاستخراج الـ MPD
+          sudo apt-get install -y ffmpeg curl jq fonts-dejavu-core python3-pip streamlink
+          # تثبيت أحدث إصدار من yt-dlp
           sudo curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o /usr/local/bin/yt-dlp
           sudo chmod a+rx /usr/local/bin/yt-dlp
 
-      - name: 🔴 Start MPD Smart Stream Engine
+      - name: 🔴 Start Smart Stream Engine
         env:
           PRIMARY_URL: ${{ inputs.video_url }}
           BACKUP_URL: ${{ inputs.backup_url }}
@@ -95,10 +94,14 @@ jobs:
           TEXT_VAL: ${{ inputs.overlay_text }}
         run: |
           echo "================================================="
-          echo "🔥 MPD Smart Stream Engine by Hacker Chafik 🔥"
+          echo "🔥 Advanced Stream Engine by Developer & Hacker Chafik 🔥"
           echo "================================================="
 
           FONT_PATH="/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
+
+          # إعدادات لضمان عدم الانقطاع (Reconnection & Buffer)
+          # هاد الأوامر غتخلي البث يرجع بوحدو يلا تقطعت الكونيكسيون من المصدر
+          FF_INPUT_FLAGS="-reconnect 1 -reconnect_at_eof 1 -reconnect_streamed 1 -reconnect_delay_max 10 -thread_queue_size 1024 -analyzeduration 10M -probesize 10M"
 
           # تجهيز Headers لـ FFmpeg
           FF_HEADERS=""
@@ -124,22 +127,27 @@ jobs:
             OUTPUT_CMD="-f flv -map [v_out] -map [a_out] \"${FB_RTMP}\""
           fi
 
-          # 🎯 محرك استخراج MPD / M3U8
+          # 🎯 محرك استخراج الروابط الشامل (yt-dlp + streamlink)
           get_real_url() {
             local raw_url=$1
             
-            # إذا كان الرابط مباشراً (ينتهي بـ mpd أو m3u8) نعطيه مباشرة لـ ffmpeg
-            if [[ "$raw_url" == *".mpd"* ]] || [[ "$raw_url" == *".m3u8"* ]]; then
+            if [[ "$raw_url" == *".mpd"* ]] || [[ "$raw_url" == *".m3u8"* ]] || [[ "$raw_url" == *"rtmp://"* ]]; then
               echo "$raw_url"
             else
-              echo "🕵️‍♂️ Extracting MPD/M3U8 from website..." >&2
-              # استخدام yt-dlp للبحث عن ملف Manifest المخفي داخل الموقع
+              echo "🕵️‍♂️ Extracting using yt-dlp..." >&2
               extracted=$(yt-dlp --allow-unplayable-formats --no-warnings -f "best" -g "$raw_url" --user-agent "$UA" --referer "$REF" 2>/dev/null)
               
               if [ -n "$extracted" ]; then
                 echo "$extracted"
               else
-                echo "$raw_url"
+                echo "⚠️ yt-dlp failed! Trying streamlink fallback..." >&2
+                extracted_sl=$(streamlink --stream-url "$raw_url" best --http-header "User-Agent=$UA" --http-header "Referer=$REF" 2>/dev/null)
+                
+                if [ -n "$extracted_sl" ]; then
+                  echo "$extracted_sl"
+                else
+                  echo "$raw_url"
+                fi
               fi
             fi
           }
@@ -150,21 +158,20 @@ jobs:
             CURRENT_STREAM=$(get_real_url "$PRIMARY_URL")
             echo "🎯 Target URL: $CURRENT_STREAM"
             
-            echo "▶️ Starting Primary Stream..."
-            # تنفيذ FFmpeg مع تمرير الـ Headers (باستخدام eval لتمرير المتغيرات بشكل صحيح)
-            eval ffmpeg -hide_banner -loglevel warning -re $FF_HEADERS -i \"$CURRENT_STREAM\" \
+            echo "▶️ Starting Primary Stream (Max Stability Mode)..."
+            eval ffmpeg -hide_banner -loglevel warning $FF_INPUT_FLAGS -re $FF_HEADERS -i \"$CURRENT_STREAM\" \
               -filter_complex \"$F_COMPLEX\" \
               -c:v libx264 -preset veryfast -profile:v high -b:v $BITRATE -maxrate $BITRATE -bufsize $(( ${BITRATE//k/} * 2 ))k -g $(( $FPS * 2 )) -r $FPS \
               -c:a aac -b:a 128k -ar 44100 \
               $OUTPUT_CMD
 
-            echo "⚠️ Primary Stream Dropped!"
+            echo "⚠️ Primary Stream Dropped! Checking backup..."
 
             if [ -n "$BACKUP_URL" ]; then
               echo "🔄 Switching to Backup URL..."
               BACKUP_STREAM=$(get_real_url "$BACKUP_URL")
               
-              eval ffmpeg -hide_banner -loglevel warning -re $FF_HEADERS -i \"$BACKUP_STREAM\" \
+              eval ffmpeg -hide_banner -loglevel warning $FF_INPUT_FLAGS -re $FF_HEADERS -i \"$BACKUP_STREAM\" \
                 -filter_complex \"$F_COMPLEX\" \
                 -c:v libx264 -preset veryfast -profile:v high -b:v $BITRATE -maxrate $BITRATE -bufsize $(( ${BITRATE//k/} * 2 ))k -g $(( $FPS * 2 )) -r $FPS \
                 -c:a aac -b:a 128k -ar 44100 \
@@ -173,6 +180,6 @@ jobs:
               echo "⚠️ Backup Stream Dropped! Retrying Primary..."
             fi
 
-            echo "⏳ Waiting 5 seconds before reconnecting..."
-            sleep 5
+            echo "⏳ Waiting 3 seconds before reconnecting..."
+            sleep 3
           done
