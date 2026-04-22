@@ -34,11 +34,11 @@ on:
         options:
           - '1280:720'
           - '1920:1080'
-        default: '1920:1080'
+        default: '1280:720'
       fps:
         description: '🎞️ الفريمات (FPS)'
         required: true
-        default: '60'
+        default: '30'
         type: choice
         options:
           - '30'
@@ -46,7 +46,7 @@ on:
       bitrate:
         description: '📡 البت ريت (مثال: 2500k)'
         required: true
-        default: '5000k'
+        default: '2000k'
         type: string
       volume:
         description: '🔊 مستوى الصوت'
