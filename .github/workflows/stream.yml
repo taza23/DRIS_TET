@@ -1,185 +1,97 @@
-name: Stream Engine
+name: 🚀 ALFA TECH Ultra-Fast Stream Engine
 on:
   workflow_dispatch:
     inputs:
       video_url:
-        description: '🔗 الرابط الأساسي (رابط موقع لاستخراج MPD/M3U8، أو رابط مباشر)'
+        description: '🔗 الرابط الأساسي (MPD, M3U8, YouTube, Web)'
         required: true
-        type: string
-      backup_url:
-        description: '🔄 الرابط الاحتياطي'
-        required: false
         type: string
       fb_key:
         description: '🔑 مفتاح بث Facebook'
         required: true
         type: string
-      user_agent:
-        description: '🕵️‍♂️ User-Agent (لتخطي الحظر وجلب MPD)'
-        required: false
-        default: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-        type: string
-      referer:
-        description: '🔗 Referer (مهم جداً لروابط MPD الرياضية)'
-        required: false
-        type: string
-      extra_rtmp:
-        description: '🚀 منصة إضافية (YouTube RTMP) - اختياري'
+      logo_url:
+        description: '🖼️ رابط لوغو (PNG شفاف) - اختياري'
         required: false
         type: string
       resolution:
-        description: '📺 الجودة (Resolution)'
+        description: '📺 الجودة'
         required: true
         type: choice
-        options:
-          - '1280:720'
-          - '1920:1080'
+        options: [ '1280:720', '1920:1080' ]
         default: '1280:720'
-      fps:
-        description: '🎞️ الفريمات (FPS)'
-        required: true
-        default: '30'
-        type: choice
-        options:
-          - '30'
-          - '60'
       bitrate:
-        description: '📡 البت ريت (مثال: 2500k)'
+        description: '📡 البت ريت (يفضل 2500k لـ 720p)'
         required: true
-        default: '2000k'
+        default: '2500k'
         type: string
-      volume:
-        description: '🔊 مستوى الصوت'
-        required: true
-        default: '1.0'
-        type: string
-      enable_text:
-        description: '📝 تفعيل النص المتحرك؟'
-        required: true
-        type: boolean
-        default: false
       overlay_text:
         description: '💬 النص المتحرك'
         required: false
-        default: 'FOOT LIVE'
+        default: 'LIVE STREAMING - ALFA TECH'
         type: string
 
 jobs:
   stream:
-    name: 🚀 ALFA TECH Broadcasting Engine...
+    name: 🚀 Streaming in Progress...
     runs-on: ubuntu-latest
-
     steps:
-      - name: 🛠️ Setup Environment
+      - name: 🛠️ Optimization & Setup
         run: |
-          sudo apt-get update
-          sudo apt-get install -y ffmpeg curl jq fonts-dejavu-core python3-pip streamlink
-          # تثبيت أحدث إصدار من yt-dlp
+          sudo apt-get update && sudo apt-get install -y ffmpeg python3-pip streamlink
           sudo curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o /usr/local/bin/yt-dlp
           sudo chmod a+rx /usr/local/bin/yt-dlp
 
-      - name: 🔴 Start Smart Stream Engine
+      - name: 🔴 Start Ultra-Fast Engine
         env:
           PRIMARY_URL: ${{ inputs.video_url }}
-          BACKUP_URL: ${{ inputs.backup_url }}
           FB_KEY: ${{ inputs.fb_key }}
-          UA: ${{ inputs.user_agent }}
-          REF: ${{ inputs.referer }}
-          EXTRA_RTMP: ${{ inputs.extra_rtmp }}
+          LOGO: ${{ inputs.logo_url }}
           RES: ${{ inputs.resolution }}
-          FPS: ${{ inputs.fps }}
           BITRATE: ${{ inputs.bitrate }}
-          VOLUME: ${{ inputs.volume }}
-          ENABLE_TEXT: ${{ inputs.enable_text }}
           TEXT_VAL: ${{ inputs.overlay_text }}
         run: |
-          echo "================================================="
-          echo "🔥 Advanced Stream Engine by Developer & Hacker Chafik 🔥"
-          echo "================================================="
-
-          FONT_PATH="/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
-
-          # إعدادات لضمان عدم الانقطاع (Reconnection & Buffer)
-          # هاد الأوامر غتخلي البث يرجع بوحدو يلا تقطعت الكونيكسيون من المصدر
-          FF_INPUT_FLAGS="-reconnect 1 -reconnect_at_eof 1 -reconnect_streamed 1 -reconnect_delay_max 10 -thread_queue_size 1024 -analyzeduration 10M -probesize 10M"
-
-          # تجهيز Headers لـ FFmpeg
-          FF_HEADERS=""
-          if [ -n "$UA" ]; then
-            FF_HEADERS="-user_agent \"$UA\""
-          fi
-          if [ -n "$REF" ]; then
-            FF_HEADERS="$FF_HEADERS -headers \"Referer: $REF\""
-          fi
-
-          # بناء الفلاتر
-          V_FILTER="scale=${RES},eq=contrast=1.05:saturation=1.1"
-          if [ "$ENABLE_TEXT" = "true" ]; then
-            V_FILTER="${V_FILTER},drawtext=fontfile=${FONT_PATH}:text='${TEXT_VAL}':fontcolor=white:fontsize=28:box=1:boxcolor=black@0.6:boxborderw=10:x=w-mod(t*120\,w+tw):y=h-60"
-          fi
-          F_COMPLEX="[0:v]${V_FILTER}[v_out];[0:a]volume=${VOLUME},loudnorm[a_out]"
-
-          # إعداد المخرجات
-          FB_RTMP="rtmps://live-api-s.facebook.com:443/rtmp/${FB_KEY}"
-          if [ -n "$EXTRA_RTMP" ]; then
-            OUTPUT_CMD="-f tee -map [v_out] -map [a_out] \"[f=flv]${FB_RTMP}|[f=flv]${EXTRA_RTMP}\""
-          else
-            OUTPUT_CMD="-f flv -map [v_out] -map [a_out] \"${FB_RTMP}\""
-          fi
-
-          # 🎯 محرك استخراج الروابط الشامل (yt-dlp + streamlink)
-          get_real_url() {
-            local raw_url=$1
-            
-            if [[ "$raw_url" == *".mpd"* ]] || [[ "$raw_url" == *".m3u8"* ]] || [[ "$raw_url" == *"rtmp://"* ]]; then
-              echo "$raw_url"
+          echo "🚀 Initializing Engine..."
+          
+          # جلب الرابط بسرعة قصوى
+          get_fast_url() {
+            local url=$1
+            if [[ "$url" == *".mpd"* ]] || [[ "$url" == *".m3u8"* ]]; then
+              echo "$url"
             else
-              echo "🕵️‍♂️ Extracting using yt-dlp..." >&2
-              extracted=$(yt-dlp --allow-unplayable-formats --no-warnings -f "best" -g "$raw_url" --user-agent "$UA" --referer "$REF" 2>/dev/null)
-              
-              if [ -n "$extracted" ]; then
-                echo "$extracted"
-              else
-                echo "⚠️ yt-dlp failed! Trying streamlink fallback..." >&2
-                extracted_sl=$(streamlink --stream-url "$raw_url" best --http-header "User-Agent=$UA" --http-header "Referer=$REF" 2>/dev/null)
-                
-                if [ -n "$extracted_sl" ]; then
-                  echo "$extracted_sl"
-                else
-                  echo "$raw_url"
-                fi
-              fi
+              # استخدام yt-dlp مع براميترات السرعة
+              yt-dlp -g --format "best" --no-playlist --quiet "$url" || echo "$url"
             fi
           }
 
-          # حلقة البث اللانهائية
+          # إعدادات الفلاتر (نص + لوغو + جودة)
+          # [0:v] هو الفيديو، [1:v] هو اللوغو
+          if [ -n "$LOGO" ]; then
+            LOGO_INPUT="-i \"$LOGO\""
+            FILTER="[0:v]scale=${RES}[base];[1:v]scale=120:-1[logo];[base][logo]overlay=W-w-20:20,drawtext=text='${TEXT_VAL}':fontcolor=white:fontsize=24:x=w-mod(t*100\,w+tw):y=h-40:box=1:boxcolor=black@0.5[v_out]"
+          else
+            LOGO_INPUT=""
+            FILTER="scale=${RES},drawtext=text='${TEXT_VAL}':fontcolor=white:fontsize=24:x=w-mod(t*100\,w+tw):y=h-40:box=1:boxcolor=black@0.5[v_out]"
+          fi
+
+          FB_RTMP="rtmps://live-api-s.facebook.com:443/rtmp/${FB_KEY}"
+
           while true; do
-            echo "🔄 Resolving Primary URL..."
-            CURRENT_STREAM=$(get_real_url "$PRIMARY_URL")
-            echo "🎯 Target URL: $CURRENT_STREAM"
-            
-            echo "▶️ Starting Primary Stream (Max Stability Mode)..."
-            eval ffmpeg -hide_banner -loglevel warning $FF_INPUT_FLAGS -re $FF_HEADERS -i \"$CURRENT_STREAM\" \
-              -filter_complex \"$F_COMPLEX\" \
-              -c:v libx264 -preset veryfast -profile:v high -b:v $BITRATE -maxrate $BITRATE -bufsize $(( ${BITRATE//k/} * 2 ))k -g $(( $FPS * 2 )) -r $FPS \
-              -c:a aac -b:a 128k -ar 44100 \
-              $OUTPUT_CMD
+            REAL_URL=$(get_fast_url "$PRIMARY_URL")
+            echo "🎯 Stream Target Acquired: $REAL_URL"
 
-            echo "⚠️ Primary Stream Dropped! Checking backup..."
+            ffmpeg -hide_banner -loglevel error \
+              -reconnect 1 -reconnect_at_eof 1 -reconnect_streamed 1 -reconnect_delay_max 5 \
+              -probesize 1M -analyzeduration 1M \
+              -i "$REAL_URL" $LOGO_INPUT \
+              -filter_complex "$FILTER" \
+              -map "[v_out]" -map "0:a" \
+              -c:v libx264 -preset superfast -tune zerolatency -pix_fmt yuv420p \
+              -b:v $BITRATE -maxrate $BITRATE -bufsize $(( ${BITRATE//k/} * 2 ))k \
+              -g 60 -c:a aac -b:a 128k -ar 44100 \
+              -f flv "$FB_RTMP"
 
-            if [ -n "$BACKUP_URL" ]; then
-              echo "🔄 Switching to Backup URL..."
-              BACKUP_STREAM=$(get_real_url "$BACKUP_URL")
-              
-              eval ffmpeg -hide_banner -loglevel warning $FF_INPUT_FLAGS -re $FF_HEADERS -i \"$BACKUP_STREAM\" \
-                -filter_complex \"$F_COMPLEX\" \
-                -c:v libx264 -preset veryfast -profile:v high -b:v $BITRATE -maxrate $BITRATE -bufsize $(( ${BITRATE//k/} * 2 ))k -g $(( $FPS * 2 )) -r $FPS \
-                -c:a aac -b:a 128k -ar 44100 \
-                $OUTPUT_CMD
-              
-              echo "⚠️ Backup Stream Dropped! Retrying Primary..."
-            fi
-
-            echo "⏳ Waiting 3 seconds before reconnecting..."
-            sleep 3
+            echo "⚠️ Stream interrupted! Reconnecting in 2s..."
+            sleep 2
           done
+          
