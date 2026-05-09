@@ -46,7 +46,7 @@ on:
       bitrate:
         description: '📡 البت ريت (مثال: 2500k)'
         required: true
-        default: '2000k'
+        default: '2500k'
         type: string
       volume:
         description: '🔊 مستوى الصوت'
@@ -61,7 +61,7 @@ on:
       overlay_text:
         description: '💬 النص المتحرك'
         required: false
-        default: 'FOOT LIVE'
+        default: 'CHAFIK GHADDAR TV'
         type: string
 
 jobs:
