@@ -1,4 +1,4 @@
-name: 🚀 Multi-Stream Ultra Engine (Optimized)
+name: 🚀 Multi-Stream Ultra Engine (Perfect Alignment)
 on:
   workflow_dispatch:
     inputs:
@@ -7,7 +7,7 @@ on:
         required: true
         type: string
       fb_keys:
-        description: '🔑 مفافيح البث (حتى هما فرق بيناتهم بـ فاصلة بنفس ترتيب الروابط)'
+        description: '🔑 مفاتيح البث (بينامتهم فاصلة بنفس الترتيب)'
         required: true
         type: string
       resolution:
@@ -27,9 +27,9 @@ on:
           - '30'
           - '60'
       overlay_text:
-        description: '📸 نص العلامة المائية المتحركة (لتحت)'
+        description: '📸 نص الإعلان المتحرك (لتحت)'
         required: false
-        default: 'CHAFIK GHADDAR TV'
+        default: '🔥 لمشاهدة بدون تقطيع وبجودة عالية.. حملوا تطبيق FOOT LIVE PRO الآن! 🔥'
         type: string
 
 jobs:
@@ -52,35 +52,28 @@ jobs:
           FPS: ${{ inputs.fps }}
           WATERMARK_TEXT: ${{ inputs.overlay_text }}
         run: |
-          # 1. تحويل السلاسل لقوائم (Arrays)
           IFS=',' read -r -a url_array <<< "$URLS"
           IFS=',' read -r -a key_array <<< "$KEYS"
 
-          # 2. تحديد Bitrate تلقائياً
           if [ "$RES" == "1920:1080" ]; then
             BITRATE="4500k"
           else
             BITRATE="2500k"
           fi
 
-          # 3. روابط الشعارات
           BRAND_LOGO="https://files.catbox.moe/7t5k1y.webp"
           COVERUP_LOGO="https://files.catbox.moe/ii06qt.png"
 
-          echo "🚀 Starting streams in parallel..."
+          echo "🚀 Starting Promo Streams with fixed positions..."
 
-          # 4. وظيفة تشغيل كل بث بوحدو
           start_stream() {
             local stream_url=$1
             local fb_key=$2
             local id=$3
 
-            echo "🎬 Processing Stream #$id..."
-            
-            # استخراج الرابط الحقيقي (يدعم m3u8, mpd, ts, mp3, mp4, etc.)
-            real_url=$(yt-dlp -g "$stream_url" --error-location --no-warnings 2>/get/null || echo "$stream_url")
+            real_url=$(yt-dlp -g "$stream_url" --error-location --no-warnings 2>/dev/null || echo "$stream_url")
 
-            # FFMPEG Command with Filter Complex for multiple overlays and Low Latency tuning
+            # التعديل الاحترافي للإحداثيات بناءً على الصورة
             ffmpeg -hide_banner -loglevel error -reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5 \
               -probesize 10M -analyzeduration 10M \
               -re -i "$real_url" \
@@ -88,23 +81,20 @@ jobs:
               -i "$COVERUP_LOGO" \
               -filter_complex \
                 "[0:v]scale=${RES}[base]; \
-                 [base]drawtext=text='${WATERMARK_TEXT}':x=w-t*150:y=h-th-20:fontcolor=white:fontsize=24[base_with_text]; \
-                 [1:v]scale=-1:80[scaled_logo1]; \
-                 [base_with_text][scaled_logo1]overlay=w-W-20:20[base_with_brand]; \
-                 [2:v]scale=-1:100[scaled_logo2]; \
-                 [base_with_brand][scaled_logo2]overlay=w-W-20:h-H-60[final_video]" \
+                 [base]drawtext=text='${WATERMARK_TEXT}':x=w-t*130:y=h-th-25:fontcolor=yellow:fontsize=26:box=1:boxcolor=black@0.7:boxborderw=8[base_with_text]; \
+                 [1:v]scale=-1:65[scaled_logo1]; \
+                 [base_with_text][scaled_logo1]overlay=w-W-30:25[base_with_brand]; \
+                 [2:v]scale=-1:90[scaled_logo2]; \
+                 [base_with_brand][scaled_logo2]overlay=35:h-H-45[final_video]" \
               -map "[final_video]" -map 0:a \
               -c:v libx264 -preset veryfast -tune zerolatency -b:v $BITRATE -maxrate $BITRATE -bufsize $(( ${BITRATE//k/} ))k \
               -g $(( FPS * 1 )) -c:a aac -b:a 128k -ar 44100 \
               -f flv "rtmps://live-api-s.facebook.com:443/rtmp/${fb_key}" &
           }
 
-          # 5. دورة تشغيل جميع الروابط في الخلفية (Parallel)
           for i in "${!url_array[@]}"; do
             start_stream "${url_array[$i]}" "${key_array[$i]}" "$i"
           done
 
-          # 6. البقاء في وضع التشغيل حتى يتم إيقاف الأكشن يدوياً
-          echo "✅ All streams are running with visual overlays and low-latency tuning."
-          echo "⚠️ To stop streaming, just click 'Cancel workflow' in GitHub."
+          wait
           wait
