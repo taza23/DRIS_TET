@@ -1,4 +1,4 @@
-Name: 🚀 Multi-Stream Ultra Engine (Optimized)
+name: 🚀 Multi-Stream Ultra Engine (Optimized)
 on:
   workflow_dispatch:
     inputs:
