@@ -1,4 +1,4 @@
-name: 🚀 CHAFIK GHADDAR TV (Instant Non-Stop Stream)
+name: 🚀 Multi-Stream Ultra Engine PRO
 on:
   workflow_dispatch:
     inputs:
@@ -7,7 +7,7 @@ on:
         required: true
         type: string
       fb_keys:
-        description: '🔑 مفاتيح البث (بينامتهم فاصلة بنفس الترتيب)'
+        description: '🔑 مفاتيح البث (حتى هما فرق بيناتهم بـ فاصلة بنفس ترتيب الروابط)'
         required: true
         type: string
       resolution:
@@ -27,9 +27,9 @@ on:
           - '30'
           - '60'
       overlay_text:
-        description: '📸 نص الإعلان المتحرك اللانهائي (لتحت)'
+        description: '📸 نص العلامة المائية'
         required: false
-        default: '🔥 لمشاهدة بدون تقطيع وبجودة عالية.. حملوا تطبيق CHAFIK GHADDAR TV الآن! 🔥      🔥 لمشاهدة بدون تقطيع وبجودة عالية.. حملوا تطبيق CHAFIK GHADDAR TV الآن! 🔥'
+        default: 'FOOT LIVE PRO - CHAFIK GHADDAR'
         type: string
 
 jobs:
@@ -44,13 +44,13 @@ jobs:
           sudo curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o /usr/local/bin/yt-dlp
           sudo chmod a+rx /usr/local/bin/yt-dlp
 
-      - name: 🚀 Launch Fast Streams
+      - name: 🚀 Launch Multi-Streams
         env:
           URLS: ${{ inputs.video_urls }}
           KEYS: ${{ inputs.fb_keys }}
           RES: ${{ inputs.resolution }}
           FPS: ${{ inputs.fps }}
-          WATERMARK_TEXT: ${{ inputs.overlay_text }}
+          WATERMARK: ${{ inputs.overlay_text }}
         run: |
           IFS=',' read -r -a url_array <<< "$URLS"
           IFS=',' read -r -a key_array <<< "$KEYS"
@@ -61,39 +61,32 @@ jobs:
             BITRATE="2500k"
           fi
 
-          BRAND_LOGO="https://files.catbox.moe/7t5k1y.webp"
-          COVERUP_LOGO="https://files.catbox.moe/ii06qt.png"
+          echo "🚀 Starting streams..."
 
           start_stream() {
             local stream_url=$1
             local fb_key=$2
             local id=$3
 
-            echo "⚽ Broadcasting Stream #$id instantly to Facebook..."
+            echo "🎬 Processing Stream #$id..."
             
-            # جلب رابط الماتش المباشر
             real_url=$(yt-dlp -g "$stream_url" --error-location --no-warnings 2>/dev/null || echo "$stream_url")
 
-            # إطلاق البث طيارة بدون أي تأخير (probesize مخفف لأقصى حد)
-            ffmpeg -hide_banner -loglevel error -reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5 \
-              -probesize 1M -analyzeduration 1M -re -i "$real_url" \
-              -i "$BRAND_LOGO" \
-              -i "$COVERUP_LOGO" \
-              -filter_complex \
-                "[0:v]scale=${RES}[base]; \
-                 [base]drawtext=text='${WATERMARK_TEXT}':x=w-mod(t*140\,w+tw):y=h-th-25:fontcolor=yellow:fontsize=26:box=1:boxcolor=black@0.7:boxborderw=8[base_with_text]; \
-                 [1:v]scale=-1:65[scaled_logo1]; \
-                 [base_with_text][scaled_logo1]overlay=w-W-30:25[base_with_brand]; \
-                 [2:v]scale=-1:90[scaled_logo2]; \
-                 [base_with_brand][scaled_logo2]overlay=35:h-H-45[final_video]" \
-              -map "[final_video]" -map 0:a? \
-              -c:v libx264 -preset veryfast -tune zerolatency -b:v $BITRATE -maxrate $BITRATE -bufsize ${BITRATE//k/}k \
-              -g $(( FPS * 2 )) -keyint_min $(( FPS * 2 )) -sc_threshold 0 -c:a aac -b:a 128k -ar 44100 \
-              -f flv -flvflags no_duration_filesize "rtmps://live-api-s.facebook.com:443/rtmp/${fb_key}" &
+            # تم إضافة إعدادات Zero-Latency والشريط المتحرك هنا
+            ffmpeg -hide_banner -loglevel error \
+              -analyzeduration 0 -probesize 2048 -fflags nobuffer -flags low_delay \
+              -reconnect 1 -reconnect_at_eof 1 -reconnect_streamed 1 -reconnect_delay_max 5 \
+              -re -i "$real_url" \
+              -vf "scale=${RES},drawtext=text='${WATERMARK}':x=w-mod(t*150\,w+tw):y=h-th-20:fontsize=35:fontcolor=white@0.9:box=1:boxcolor=black@0.5:boxborderw=5" \
+              -c:v libx264 -preset ultrafast -tune zerolatency \
+              -b:v $BITRATE -maxrate $BITRATE -bufsize $BITRATE \
+              -g $(( FPS * 2 )) -c:a aac -b:a 128k -ar 44100 \
+              -f flv "rtmps://live-api-s.facebook.com:443/rtmp/${fb_key}" &
           }
 
           for i in "${!url_array[@]}"; do
             start_stream "${url_array[$i]}" "${key_array[$i]}" "$i"
           done
 
+          echo "✅ All streams are running in parallel with Zero-Latency."
           wait
