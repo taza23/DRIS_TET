@@ -1,23 +1,27 @@
-name: 🚀 Multi-Stream Ultra Engine (Optimized)
+name: 🚀 Multi-Stream Ultra Engine PRO
+
 on:
   workflow_dispatch:
     inputs:
       video_urls:
-        description: '🔗 روابط البث (فرق بيناتهم بـ فاصلة ,)'
+        description: '🔗 روابط البث (فرق بينهم بـ ,)'
         required: true
         type: string
+
       fb_keys:
-        description: '🔑 مفافيح البث (حتى هما فرق بيناتهم بـ فاصلة بنفس ترتيب الروابط)'
+        description: '🔑 مفاتيح البث (بنفس ترتيب الروابط)'
         required: true
         type: string
+
       resolution:
         description: '📺 الجودة'
         required: true
         type: choice
+        default: '1280:720'
         options:
           - '1280:720'
           - '1920:1080'
-        default: '1280:720'
+
       fps:
         description: '🎞️ FPS'
         required: true
@@ -26,76 +30,137 @@ on:
         options:
           - '30'
           - '60'
+
       overlay_text:
-        description: '📸 نص العلامة المائية المتحركة (لتحت)'
+        description: '📸 النص المتحرك'
         required: false
         default: 'CHAFIK GHADDAR TV'
         type: string
 
 jobs:
   broadcasting:
-    name: 📡 Streaming Processing
+    name: 📡 Ultra Streaming Engine
     runs-on: ubuntu-latest
+
     steps:
-      - name: 🛠️ Install Power Tools
+      - name: 🛠️ Install Tools
         run: |
           sudo apt-get update
-          sudo apt-get install -y ffmpeg curl jq streamlink
-          sudo curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o /usr/local/bin/yt-dlp
+
+          sudo apt-get install -y \
+            ffmpeg \
+            curl \
+            jq \
+            streamlink
+
+          sudo curl -L \
+          https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp \
+          -o /usr/local/bin/yt-dlp
+
           sudo chmod a+rx /usr/local/bin/yt-dlp
-      - name: 🚀 Launch Multi-Streams
+
+      - name: 🚀 Start Streams
         env:
           URLS: ${{ inputs.video_urls }}
           KEYS: ${{ inputs.fb_keys }}
           RES: ${{ inputs.resolution }}
           FPS: ${{ inputs.fps }}
           WATERMARK_TEXT: ${{ inputs.overlay_text }}
+
         run: |
-          # 1. تحويل السلاسل لقوائم (Arrays)
+
           IFS=',' read -r -a url_array <<< "$URLS"
           IFS=',' read -r -a key_array <<< "$KEYS"
-          # 2. تحديد Bitrate تلقائياً
+
+          # جودة تلقائية
           if [ "$RES" == "1920:1080" ]; then
             BITRATE="4500k"
           else
             BITRATE="2500k"
           fi
-          # 3. روابط الشعارات
+
+          # الشعارات
           BRAND_LOGO="https://files.catbox.moe/7t5k1y.webp"
           COVERUP_LOGO="https://files.catbox.moe/ii06qt.png"
-          echo "🚀 Starting streams in parallel..."
-          # 4. وظيفة تشغيل كل بث بوحدو
+
+          echo "🚀 Starting Ultra Streams..."
+
           start_stream() {
+
             local stream_url=$1
             local fb_key=$2
             local id=$3
-            echo "🎬 Processing Stream #$id..."
-            
-            # استخراج الرابط الحقيقي (يدعم m3u8, mpd, ts, mp3, mp4, etc.)
-            real_url=$(yt-dlp -g "$stream_url" --error-location --no-warnings 2>/get/null || echo "$stream_url")
-            # FFMPEG Command with Filter Complex for multiple overlays and Low Latency tuning
-            ffmpeg -hide_banner -loglevel error -reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5 \
-              -probesize 10M -analyzeduration 10M \
-              -re -i "$real_url" \
+
+            echo "🎬 Stream #$id Starting..."
+
+            # استخراج الرابط الحقيقي بسرعة
+            real_url=$(yt-dlp -g "$stream_url" --no-warnings 2>/dev/null || echo "$stream_url")
+
+            ffmpeg \
+              -hide_banner \
+              -loglevel warning \
+              -fflags nobuffer \
+              -flags low_delay \
+              -strict experimental \
+              -rw_timeout 15000000 \
+              -reconnect 1 \
+              -reconnect_streamed 1 \
+              -reconnect_delay_max 2 \
+              -thread_queue_size 4096 \
+              -probesize 32k \
+              -analyzeduration 0 \
+              -i "$real_url" \
               -i "$BRAND_LOGO" \
               -i "$COVERUP_LOGO" \
-              -filter_complex \
-                "[0:v]scale=${RES}[base]; \
-                 [base]drawtext=text='${WATERMARK_TEXT}':x=w-t*150:y=h-th-20:fontcolor=white:fontsize=24[base_with_text]; \
-                 [1:v]scale=-1:80[scaled_logo1]; \
-                 [base_with_text][scaled_logo1]overlay=w-W-20:20[base_with_brand]; \
-                 [2:v]scale=-1:100[scaled_logo2]; \
-                 [base_with_brand][scaled_logo2]overlay=w-W-20:h-H-60[final_video]" \
-              -map "[final_video]" -map 0:a \
-              -c:v libx264 -preset veryfast -tune zerolatency -b:v $BITRATE -maxrate $BITRATE -bufsize $(( ${BITRATE//k/} ))k \
-              -g $(( FPS * 1 )) -c:a aac -b:a 128k -ar 44100 \
-              -f flv "rtmps://live-api-s.facebook.com:443/rtmp/${fb_key}" &
+              -filter_complex "\
+              [0:v]scale=${RES}:force_original_aspect_ratio=decrease,\
+              pad=${RES}:(ow-iw)/2:(oh-ih)/2[base]; \
+
+              [base]drawtext=\
+              text='${WATERMARK_TEXT}':\
+              fontsize=28:\
+              fontcolor=white@0.90:\
+              borderw=2:\
+              bordercolor=black@0.6:\
+              x=w-mod(t*220\\,w+tw):\
+              y=h-th-25\
+              [txt]; \
+
+              [1:v]scale=-1:75[logo1]; \
+              [txt][logo1]overlay=W-w-15:15[tmp1]; \
+
+              [2:v]scale=-1:95[logo2]; \
+              [tmp1][logo2]overlay=W-w-15:H-h-45[final]" \
+              -map "[final]" \
+              -map 0:a? \
+              -c:v libx264 \
+              -preset ultrafast \
+              -tune zerolatency \
+              -pix_fmt yuv420p \
+              -r $FPS \
+              -g $FPS \
+              -keyint_min $FPS \
+              -sc_threshold 0 \
+              -b:v $BITRATE \
+              -maxrate $BITRATE \
+              -bufsize 1M \
+              -c:a aac \
+              -b:a 128k \
+              -ar 44100 \
+              -threads 0 \
+              -f flv \
+              "rtmps://live-api-s.facebook.com:443/rtmp/${fb_key}" &
+
           }
-          # 5. دورة تشغيل جميع الروابط في الخلفية (Parallel)
+
+          # تشغيل جميع البثوث بالتوازي
           for i in "${!url_array[@]}"; do
             start_stream "${url_array[$i]}" "${key_array[$i]}" "$i"
           done
-          # 6. البقاء في وضع التشغيل حتى يتم إيقاف الأكشن يدوياً
-          echo "✅ All streams are running with visual overlays and low-latency tuning."
-          echo "⚠️ To stop streaming, just click 'Cancel workflow' in GitHub."
+
+          echo "✅ جميع البثوث شغالة"
+          echo "⚡ Ultra Low Latency Enabled"
+          echo "📸 Moving Watermark Enabled"
+          echo "🔥 Facebook Fast Start Enabled"
+
           wait
