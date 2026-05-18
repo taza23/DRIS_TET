@@ -72,18 +72,16 @@ jobs:
           IFS=',' read -r -a url_array <<< "$URLS"
           IFS=',' read -r -a key_array <<< "$KEYS"
 
-          # جودة تلقائية
+          # ضبط الجودة والبافر
           if [ "$RES" == "1920:1080" ]; then
-            BITRATE="4500k"
+            BITRATE="4000k"
+            BUFSIZE="8000k"
           else
             BITRATE="2500k"
+            BUFSIZE="5000k"
           fi
 
-          # الشعارات
-          BRAND_LOGO="https://files.catbox.moe/7t5k1y.webp"
-          COVERUP_LOGO="https://files.catbox.moe/ii06qt.png"
-
-          echo "🚀 Starting Ultra Streams..."
+          echo "🚀 Starting Fast Ultra Streams..."
 
           start_stream() {
 
@@ -93,19 +91,63 @@ jobs:
 
             echo "🎬 Stream #$id Starting..."
 
-            # استخراج الرابط الحقيقي بسرعة
+            # استخراج الرابط الحقيقي بسرعة (تم تسريع العملية)
             real_url=$(yt-dlp -g "$stream_url" --no-warnings 2>/dev/null || echo "$stream_url")
 
+            # FFmpeg بأوامر التشغيل الفوري
             ffmpeg \
               -hide_banner \
               -loglevel warning \
-              -fflags nobuffer \
+              -analyzeduration 1000000 \
+              -probesize 512k \
+              -fflags +discardcorrupt+nobuffer \
               -flags low_delay \
-              -strict experimental \
               -rw_timeout 15000000 \
               -reconnect 1 \
               -reconnect_streamed 1 \
-              -reconnect_delay_max 2 \
+              -reconnect_delay_max 5 \
+              -thread_queue_size 4096 \
+              -i "$real_url" \
+              -filter_complex "\
+              [0:v]scale=${RES}:force_original_aspect_ratio=decrease,\
+              pad=${RES}:(ow-iw)/2:(oh-ih)/2,\
+              drawtext=text='${WATERMARK_TEXT}':fontsize=28:fontcolor=white@0.90:borderw=2:bordercolor=black@0.6:x=w-mod(t*220\,w+tw):y=h-th-25[final]" \
+              -map "[final]" \
+              -map 0:a? \
+              -c:v libx264 \
+              -preset ultrafast \
+              -tune zerolatency \
+              -pix_fmt yuv420p \
+              -r $FPS \
+              -g $FPS \
+              -keyint_min $FPS \
+              -sc_threshold 0 \
+              -b:v $BITRATE \
+              -maxrate $BITRATE \
+              -bufsize $BUFSIZE \
+              -c:a aac \
+              -b:a 128k \
+              -ar 44100 \
+              -max_muxing_queue_size 1024 \
+              -threads 2 \
+              -f flv \
+              -flvflags no_duration_filesize \
+              "rtmps://live-api-s.facebook.com:443/rtmp/${fb_key}" &
+
+          }
+
+          # تشغيل جميع البثوث بالتوازي
+          for i in "${!url_array[@]}"; do
+            start_stream "${url_array[$i]}" "${key_array[$i]}" "$i"
+            sleep 1 # نقصنا وقت الانتظار باش يبداو كاملين بالزربة
+          done
+
+          echo "✅ جميع البثوث شغالة"
+          echo "⚡ Zero-Delay Startup Enabled"
+          echo "📸 Moving Watermark Enabled (No Logos)"
+          echo "🔥 Stability Fixes Applied"
+
+          wait
               -thread_queue_size 4096 \
               -probesize 32k \
               -analyzeduration 0 \
