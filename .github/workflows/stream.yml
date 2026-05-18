@@ -1,27 +1,23 @@
-name: 🚀 Multi-Stream Ultra Engine PRO
-
+name: 🚀 Multi-Stream Ultra Engine
 on:
   workflow_dispatch:
     inputs:
       video_urls:
-        description: '🔗 روابط البث (فرق بينهم بـ ,)'
+        description: '🔗 روابط البث (فرق بيناتهم بـ فاصلة ,)'
         required: true
         type: string
-
       fb_keys:
-        description: '🔑 مفاتيح البث (بنفس ترتيب الروابط)'
+        description: '🔑 مفاتيح البث (حتى هما فرق بيناتهم بـ فاصلة بنفس ترتيب الروابط)'
         required: true
         type: string
-
       resolution:
         description: '📺 الجودة'
         required: true
         type: choice
-        default: '1280:720'
         options:
           - '1280:720'
           - '1920:1080'
-
+        default: '1280:720'
       fps:
         description: '🎞️ FPS'
         required: true
@@ -30,119 +26,71 @@ on:
         options:
           - '30'
           - '60'
-
       overlay_text:
-        description: '📸 النص المتحرك'
+        description: '📸 نص العلامة المائية'
         required: false
-        default: 'CHAFIK GHADDAR TV'
+        default: 'ALFA TECH LIVE'
         type: string
 
 jobs:
   broadcasting:
-    name: 📡 Ultra Streaming Engine
+    name: 📡 Streaming Processing
     runs-on: ubuntu-latest
-
     steps:
-      - name: 🛠️ Install Tools
+      - name: 🛠️ Install Power Tools
         run: |
           sudo apt-get update
           sudo apt-get install -y ffmpeg curl jq streamlink
-          sudo curl -L https://github.com -o /usr/local/bin/yt-dlp
+          sudo curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o /usr/local/bin/yt-dlp
           sudo chmod a+rx /usr/local/bin/yt-dlp
 
-      - name: 🚀 Start Streams
+      - name: 🚀 Launch Multi-Streams
         env:
           URLS: ${{ inputs.video_urls }}
           KEYS: ${{ inputs.fb_keys }}
           RES: ${{ inputs.resolution }}
           FPS: ${{ inputs.fps }}
-          WATERMARK_TEXT: ${{ inputs.overlay_text }}
-
+          WATERMARK: ${{ inputs.overlay_text }}
         run: |
+          # 1. تحويل السلاسل لقوائم (Arrays)
           IFS=',' read -r -a url_array <<< "$URLS"
           IFS=',' read -r -a key_array <<< "$KEYS"
 
+          # 2. تحديد Bitrate تلقائياً
           if [ "$RES" == "1920:1080" ]; then
-            BITRATE="4000k"
-            BUFSIZE="8000k"
+            BITRATE="4500k"
           else
-            BITRATE="2200k"
-            BUFSIZE="4400k"
+            BITRATE="2500k"
           fi
 
-          echo "🚀 Starting Stable Ultra Streams..."
+          echo "🚀 Starting ${{ github.event.inputs.video_urls }} streams..."
 
+          # 3. وظيفة تشغيل كل بث بوحدو
           start_stream() {
             local stream_url=$1
             local fb_key=$2
             local id=$3
 
-            echo "🎬 Stream #$id Starting..."
+            echo "🎬 Processing Stream #$id..."
+            
+            # استخراج الرابط الحقيقي (يدعم m3u8, mpd, ts, mp3, mp4, etc.)
+            real_url=$(yt-dlp -g "$stream_url" --error-location --no-warnings 2>/dev/null || echo "$stream_url")
 
-            while true; do
-              real_url=$(yt-dlp -g "$stream_url" --no-warnings 2>/dev/null || echo "$stream_url")
-              
-              echo "🔄 Executing ffmpeg for Stream #$id..."
-              
-              ffmpeg \
-                -hide_banner \
-                -loglevel warning \
-                -reconnect 1 \
-                -reconnect_at_eof 1 \
-                -reconnect_streamed 1 \
-                -reconnect_delay_max 5 \
-                -rw_timeout 10000000 \
-                -thread_queue_size 8192 \
-                -fflags +genpts+async+nobuffer \
-                -i "$real_url" \
-                -filter_complex "\
-                [0:v]scale=${RES}:force_original_aspect_ratio=decrease,\
-                pad=${RES}:(ow-iw)/2:(oh-ih)/2[base]; \
-                [base]drawtext=\
-                text='${WATERMARK_TEXT}':\
-                fontsize=28:\
-                fontcolor=white@0.90:\
-                borderw=2:\
-                bordercolor=black@0.6:\
-                x=w-mod(t*220\\,w+tw):\
-                y=h-th-25[final]" \
-                -map "[final]" \
-                -map 0:a? \
-                -c:v libx264 \
-                -preset superfast \
-                -tune zerolatency \
-                -pix_fmt yuv420p \
-                -r $FPS \
-                -g $((FPS * 2)) \
-                -keyint_min $FPS \
-                -sc_threshold 0 \
-                -b:v $BITRATE \
-                -maxrate $BITRATE \
-                -bufsize $BUFSIZE \
-                -c:a aac \
-                -b:a 128k \
-                -ar 44100 \
-                -flvflags no_duration_filesize \
-                -f flv \
-                "rtmps://://facebook.com{fb_key}"
-
-              echo "⚠️ Stream #$id disconnected. Reconnecting in 5 seconds..."
-              sleep 5
-            done
+            ffmpeg -hide_banner -loglevel error -reconnect 1 -reconnect_at_eof 1 -reconnect_streamed 1 -reconnect_delay_max 5 \
+              -re -i "$real_url" \
+              -vf "scale=${RES},drawtext=text='${WATERMARK}':x=w-tw-20:y=20:fontsize=30:fontcolor=white@0.8:box=1:boxcolor=black@0.4:boxborderw=5" \
+              -c:v libx264 -preset veryfast -b:v $BITRATE -maxrate $BITRATE -bufsize $(( ${BITRATE//k/} * 2 ))k \
+              -g $(( FPS * 2 )) -c:a aac -b:a 128k -ar 44100 \
+              -f flv "rtmps://live-api-s.facebook.com:443/rtmp/${fb_key}" &
           }
 
-          # تشغيل البثوث بالتوازي بشكل صحيح لمنع توقف السيرفر
-          total_streams=${#url_array[@]}
+          # 4. دورة تشغيل جميع الروابط في الخلفية (Parallel)
           for i in "${!url_array[@]}"; do
-            if [ $i -eq $((total_streams - 1)) ]; then
-              echo "🔥 Launching final stream in foreground to keep workflow alive..."
-              start_stream "${url_array[$i]}" "${key_array[$i]}" "$i"
-            else
-              start_stream "${url_array[$i]}" "${key_array[$i]}" "$i" &
-              sleep 3
-            fi
+            start_stream "${url_array[$i]}" "${key_array[$i]}" "$i"
           done
 
-          echo "✅ جميع البثوث مستقرة وشغالة بدون شعارات"
+          # 5. البقاء في وضع التشغيل حتى يتم إيقاف الأكشن يدوياً
+          echo "✅ All streams are running in parallel."
+          echo "⚠️ To stop streaming, just click 'Cancel workflow' in GitHub."
           wait
           
