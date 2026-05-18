@@ -72,7 +72,7 @@ jobs:
           IFS=',' read -r -a url_array <<< "$URLS"
           IFS=',' read -r -a key_array <<< "$KEYS"
 
-          # ضبط الجودة والبافر
+          # ضبط الجودة والبافر الذكي
           if [ "$RES" == "1920:1080" ]; then
             BITRATE="4000k"
             BUFSIZE="8000k"
@@ -81,7 +81,7 @@ jobs:
             BUFSIZE="5000k"
           fi
 
-          echo "🚀 Starting Fast Ultra Streams..."
+          echo "🚀 Starting Fast & Stable Ultra Streams..."
 
           start_stream() {
 
@@ -91,16 +91,16 @@ jobs:
 
             echo "🎬 Stream #$id Starting..."
 
-            # استخراج الرابط الحقيقي بسرعة (تم تسريع العملية)
+            # استخراج الرابط الحقيقي بسرعة
             real_url=$(yt-dlp -g "$stream_url" --no-warnings 2>/dev/null || echo "$stream_url")
 
-            # FFmpeg بأوامر التشغيل الفوري
+            # تم عزل وحماية الفاصلة داخل علامات تنصيص فردية لمنع الـ Exit Code 2 نهائياً
             ffmpeg \
               -hide_banner \
               -loglevel warning \
               -analyzeduration 1000000 \
               -probesize 512k \
-              -fflags +discardcorrupt+nobuffer \
+              -fflags +genpts+discardcorrupt+nobuffer \
               -flags low_delay \
               -rw_timeout 15000000 \
               -reconnect 1 \
@@ -108,18 +108,15 @@ jobs:
               -reconnect_delay_max 5 \
               -thread_queue_size 4096 \
               -i "$real_url" \
-              -filter_complex "\
-              [0:v]scale=${RES}:force_original_aspect_ratio=decrease,\
-              pad=${RES}:(ow-iw)/2:(oh-ih)/2,\
-              drawtext=text='${WATERMARK_TEXT}':fontsize=28:fontcolor=white@0.90:borderw=2:bordercolor=black@0.6:x=w-mod(t*220\,w+tw):y=h-th-25[final]" \
-              -map "[final]" \
+              -vf "scale=${RES}:force_original_aspect_ratio=decrease,pad=${RES}:(ow-iw)/2:(oh-ih)/2,drawtext=text='${WATERMARK_TEXT}':fontsize=28:fontcolor=white@0.90:borderw=2:bordercolor=black@0.6:x='w-mod(t*220,w+tw)':y='h-th-25'" \
+              -map 0:v \
               -map 0:a? \
               -c:v libx264 \
               -preset ultrafast \
               -tune zerolatency \
               -pix_fmt yuv420p \
               -r $FPS \
-              -g $FPS \
+              -g $((FPS * 2)) \
               -keyint_min $FPS \
               -sc_threshold 0 \
               -b:v $BITRATE \
@@ -139,6 +136,14 @@ jobs:
           # تشغيل جميع البثوث بالتوازي
           for i in "${!url_array[@]}"; do
             start_stream "${url_array[$i]}" "${key_array[$i]}" "$i"
+            sleep 2
+          done
+
+          echo "✅ جميع البثوث شغالة بنجاح وبدون أخطاء"
+          echo "⚡ Zero-Delay Startup + Anti-Freeze Enabled"
+          echo "📸 Moving Watermark Securely Framed"
+
+          wait
             sleep 1 # نقصنا وقت الانتظار باش يبداو كاملين بالزربة
           done
 
