@@ -47,7 +47,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y ffmpeg curl jq streamlink
-          sudo curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o /usr/local/bin/yt-dlp
+          sudo curl -L https://github.com -o /usr/local/bin/yt-dlp
           sudo chmod a+rx /usr/local/bin/yt-dlp
 
       - name: 🚀 Start Streams
@@ -62,7 +62,6 @@ jobs:
           IFS=',' read -r -a url_array <<< "$URLS"
           IFS=',' read -r -a key_array <<< "$KEYS"
 
-          # ضبط تلقائي لمعدل البث وحجم البافر لمنع التعثر والتنغيم
           if [ "$RES" == "1920:1080" ]; then
             BITRATE="4000k"
             BUFSIZE="8000k"
@@ -80,11 +79,9 @@ jobs:
 
             echo "🎬 Stream #$id Starting..."
 
-            # استخراج الرابط مع تفعيل الفلاتر لضمان الثبات
-            real_url=$(yt-dlp -g "$stream_url" --no-warnings 2>/dev/null || echo "$stream_url")
-
-            # حلقة تكرار ذكية: إذا سقط البث يعيد تشغيله تلقائياً بدون توقف الوظيفة كاملة
             while true; do
+              real_url=$(yt-dlp -g "$stream_url" --no-warnings 2>/dev/null || echo "$stream_url")
+              
               echo "🔄 Executing ffmpeg for Stream #$id..."
               
               ffmpeg \
@@ -127,17 +124,23 @@ jobs:
                 -ar 44100 \
                 -flvflags no_duration_filesize \
                 -f flv \
-                "rtmps://live-api-s.facebook.com:443/rtmp/${fb_key}"
+                "rtmps://://facebook.com{fb_key}"
 
-              echo "⚠️ Stream #$id disconnected. Reconnecting in 3 seconds..."
-              sleep 3
-            done &
+              echo "⚠️ Stream #$id disconnected. Reconnecting in 5 seconds..."
+              sleep 5
+            done
           }
 
-          # تشغيل البثوث بالتوازي
+          # تشغيل البثوث بالتوازي بشكل صحيح لمنع توقف السيرفر
+          total_streams=${#url_array[@]}
           for i in "${!url_array[@]}"; do
-            start_stream "${url_array[$i]}" "${key_array[$i]}" "$i"
-            sleep 2 # تأخير بسيط بين إطلاق البث والآخر لتفادي ضغط المعالج دفعة واحدة
+            if [ $i -eq $((total_streams - 1)) ]; then
+              echo "🔥 Launching final stream in foreground to keep workflow alive..."
+              start_stream "${url_array[$i]}" "${key_array[$i]}" "$i"
+            else
+              start_stream "${url_array[$i]}" "${key_array[$i]}" "$i" &
+              sleep 3
+            fi
           done
 
           echo "✅ جميع البثوث مستقرة وشغالة بدون شعارات"
