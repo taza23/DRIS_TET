@@ -29,7 +29,7 @@ on:
       overlay_text:
         description: '📸 نص العلامة المائية'
         required: false
-        default: 'ALFA TECH LIVE'
+        default: 'CHAFIK GHADDAR TV'
         type: string
 
 jobs:
