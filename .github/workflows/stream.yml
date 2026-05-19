@@ -78,7 +78,7 @@ jobs:
 
             ffmpeg -hide_banner -loglevel error -reconnect 1 -reconnect_at_eof 1 -reconnect_streamed 1 -reconnect_delay_max 5 \
               -re -i "$real_url" \
-              -vf "scale=${RES},drawtext=text='${WATERMARK}':x=w-tw-20:y=20:fontsize=30:fontcolor=white@0.8:box=1:boxcolor=black@0.4:boxborderw=5" \
+              -vf "scale=${RES},drawtext=text='${WATERMARK}':x=w-mod(t*150\\,w+tw):y=h-th-30:fontsize=30:fontcolor=white@0.8:box=1:boxcolor=black@0.4:boxborderw=5" \
               -c:v libx264 -preset veryfast -b:v $BITRATE -maxrate $BITRATE -bufsize $(( ${BITRATE//k/} * 2 ))k \
               -g $(( FPS * 2 )) -c:a aac -b:a 128k -ar 44100 \
               -f flv "rtmps://live-api-s.facebook.com:443/rtmp/${fb_key}" &
@@ -93,4 +93,3 @@ jobs:
           echo "✅ All streams are running in parallel."
           echo "⚠️ To stop streaming, just click 'Cancel workflow' in GitHub."
           wait
-          
