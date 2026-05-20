@@ -1,18 +1,16 @@
-name: FB Live Stream PRO
+name: FB Multi-Stream PRO
 
 on:
   workflow_dispatch:
     inputs:
-      SOURCE_LINK:
-        description: 'رابط البث الأصلي (M3U8 أو فيديو)'
+      STREAMS_LIST:
+        description: "ضع الروابط والسوارت هنا (كل سطر فيه: الرابط|الساروت)"
         required: true
-      FB_STREAM_KEY:
-        description: 'مفتاح بث فيسبوك (Stream Key فقط)'
-        required: true
+        default: "link1|key1\nlink2|key2"
       WATERMARK_TEXT:
         description: 'نص العلامة المائية'
         required: true
-        default: 'CHAFIK GHADDAR TV'
+        default: 'FOOT LIVE PRO'
 
 jobs:
   broadcast:
@@ -23,14 +21,29 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y ffmpeg
           
-      - name: Start Broadcast to Facebook Live
+      - name: Start Multi-Broadcast to Facebook Live
         run: |
-          echo "Starting the stream..."
-          ffmpeg -hide_banner -loglevel warning \
-          -thread_queue_size 1024 -i "${{ github.event.inputs.SOURCE_LINK }}" \
-          -vf "drawtext=text='${{ github.event.inputs.WATERMARK_TEXT }}':fontcolor=white:fontsize=35:box=1:boxcolor=black@0.5:x=w-mod(t*120\,w+text_w):y=h-th-30" \
-          -c:v libx264 -preset veryfast -profile:v main -b:v 2500k -maxrate 2500k -bufsize 5000k \
-          -pix_fmt yuv420p -g 60 \
-          -c:a aac -b:a 128k -ar 44100 \
-          -f flv "rtmps://live-api-s.facebook.com:443/rtmp/${{ github.event.inputs.FB_STREAM_KEY }}"
+          echo "Starting the intelligent multi-stream..."
           
+          # قراءة الأسطر وتشغيل كل بث في الخلفية بذكاء
+          echo "${{ github.event.inputs.STREAMS_LIST }}" | while IFS='|' read -r src_link fb_key; do
+            # تجنب الأسطر الخاوية
+            [ -z "$src_link" ] || [ -z "$fb_key" ] && continue
+            
+            echo "Launching stream for: $src_link"
+            
+            # تشغيل الـ FFmpeg في الخلفية باستخدام (&) باش يخدموا كاملين دقة واحدة
+            ffmpeg -hide_banner -loglevel warning \
+            -thread_queue_size 1024 -i "$src_link" \
+            -vf "drawtext=text='${{ github.event.inputs.WATERMARK_TEXT }}':fontcolor=white:fontsize=35:box=1:boxcolor=black@0.5:x=w-mod(t*120\,w+text_w):y=h-th-30" \
+            -c:v libx264 -preset veryfast -profile:v main -b:v 2500k -maxrate 2500k -bufsize 5000k \
+            -pix_fmt yuv420p -g 60 \
+            -c:a aac -b:a 128k -ar 44100 \
+            -f flv "rtmps://live-api-s.facebook.com:443/rtmp/$fb_key" &
+            
+            # تسنية خفيفة بين إطلاق بث وبث لضمان استقرار السيرفر
+            sleep 2
+          done
+          
+          # الانتظار حتى تسالي جميع عمليات البث وميطفيش الـ Workflow
+          wait
