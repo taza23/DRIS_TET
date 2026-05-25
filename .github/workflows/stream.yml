@@ -94,5 +94,5 @@ jobs:
           -b:a 128k \
           -ar 44100 \
           -f flv \
-          "rtmps://live-api-s.facebook.com:443/rtmp/${{ matrix.matrix.key }}"
+          "rtmps://live-api-s.facebook.com:443/rtmp/${{ matrix.key }}"
           
