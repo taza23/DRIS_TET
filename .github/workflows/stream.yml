@@ -26,35 +26,39 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y ffmpeg
 
-      - name: 🚀 Start Multi Streaming (Unlimited Streams)
+      - name: 🚀 Start Multi Streaming
         shell: bash
         run: |
           echo "=============================="
           echo "🚀 STARTING MULTI STREAM..."
           echo "=============================="
 
-          # تحويل القوائم إلى Arrays
-          IFS=',' read -ra SOURCES <<< "${{ github.event.inputs.SOURCE_LINKS }}"
-          IFS=',' read -ra KEYS <<< "${{ github.event.inputs.FB_STREAM_KEYS }}"
+          # إزالة المسافات + الأسطر الفارغة
+          CLEAN_SOURCES=$(echo "${{ github.event.inputs.SOURCE_LINKS }}" | tr -d '\n' | sed 's/ *, */,/g')
+          CLEAN_KEYS=$(echo "${{ github.event.inputs.FB_STREAM_KEYS }}" | tr -d '\n' | sed 's/ *, */,/g')
+
+          IFS=',' read -ra SOURCES <<< "$CLEAN_SOURCES"
+          IFS=',' read -ra KEYS <<< "$CLEAN_KEYS"
 
           COUNT_SOURCES=${#SOURCES[@]}
           COUNT_KEYS=${#KEYS[@]}
 
-          # التحقق من التساوي
+          echo "عدد الروابط: $COUNT_SOURCES"
+          echo "عدد المفاتيح: $COUNT_KEYS"
+
           if [ "$COUNT_SOURCES" -ne "$COUNT_KEYS" ]; then
             echo "❌ عدد الروابط وعدد المفاتيح غير متساوي"
             exit 1
           fi
 
-          # رفع الحد الأقصى للعمليات
+          # رفع حدود العمليات
           ulimit -u 4096
           ulimit -n 100000
 
-          # تشغيل كل بث في Process مستقل
           for (( i=0; i<$COUNT_SOURCES; i++ ))
           do
-            SOURCE=$(echo "${SOURCES[$i]}" | xargs)
-            KEY=$(echo "${KEYS[$i]}" | xargs)
+            SOURCE="${SOURCES[$i]}"
+            KEY="${KEYS[$i]}"
 
             echo "▶️ Launch Stream $((i+1))"
 
@@ -91,9 +95,5 @@ jobs:
             echo "✅ Stream $((i+1)) Started"
           done
 
-          echo "=============================="
           echo "🔥 ALL STREAMS RUNNING"
-          echo "=============================="
-
-          # منع انتهاء الـ runner
           tail -f /dev/null
