@@ -1,14 +1,15 @@
-name: 🚀 FB STREAM STABLE PRO
+name: 🚀 FB MULTI STREAM 720P STABLE
 
 on:
   workflow_dispatch:
     inputs:
+
       SOURCE_LINKS:
-        description: 'روابط البث'
+        description: 'روابط البث - فرق بينهم بـ ,'
         required: true
 
       FB_STREAM_KEYS:
-        description: 'مفاتيح البث'
+        description: 'مفاتيح البث - فرق بينهم بـ ,'
         required: true
 
       WATERMARK_TEXT:
@@ -17,19 +18,24 @@ on:
         default: 'CHAFIK GHADDAR TV'
 
 jobs:
-  broadcast:
+  stream-engine:
     runs-on: ubuntu-latest
     timeout-minutes: 360
 
     steps:
+
       - name: ⚡ Install FFmpeg
         run: |
           sudo apt update
           sudo apt install -y ffmpeg
 
-      - name: 🚀 Start Stable Streams
+      - name: 🚀 Launch Stable Streams
         shell: bash
         run: |
+
+          echo "========================================"
+          echo "🚀 STARTING FB MULTI STREAM ENGINE"
+          echo "========================================"
 
           mkdir -p logs
 
@@ -40,15 +46,19 @@ jobs:
           TOTAL_KEYS=${#KEYS[@]}
 
           if [ "$TOTAL_SOURCES" -ne "$TOTAL_KEYS" ]; then
-            echo "ERROR"
+            echo "❌ عدد الروابط والمفاتيح غير متساوي"
             exit 1
           fi
+
+          echo "🔥 TOTAL STREAMS: $TOTAL_SOURCES"
 
           for (( i=0; i<$TOTAL_SOURCES; i++ ))
           do
 
             SOURCE=$(echo "${SOURCES[$i]}" | xargs)
             KEY=$(echo "${KEYS[$i]}" | xargs)
+
+            echo "▶️ Launching Stream $((i+1))"
 
             (
               while true
@@ -69,26 +79,30 @@ jobs:
                 -thread_queue_size 4096 \
                 -threads 1 \
                 -i "$SOURCE" \
-                -vf "drawtext=text='${{ github.event.inputs.WATERMARK_TEXT }}':fontcolor=white:fontsize=18:borderw=1:bordercolor=black:box=1:boxcolor=black@0.25:x=10:y=10" \
+                -vf "drawtext=text='${{ github.event.inputs.WATERMARK_TEXT }}':fontcolor=white:fontsize=16:borderw=1:bordercolor=black:box=1:boxcolor=black@0.20:x=10:y=10" \
                 -map 0:v:0 \
                 -map 0:a? \
                 -c:v libx264 \
                 -preset ultrafast \
                 -tune zerolatency \
                 -pix_fmt yuv420p \
-                -r 24 \
-                -g 48 \
-                -keyint_min 48 \
+                -profile:v baseline \
+                -level 3.1 \
+                -r 20 \
+                -g 40 \
+                -keyint_min 40 \
                 -sc_threshold 0 \
-                -b:v 1200k \
-                -maxrate 1200k \
-                -bufsize 2400k \
-                -s 854x480 \
+                -s 1280x720 \
+                -b:v 1400k \
+                -maxrate 1400k \
+                -bufsize 2800k \
                 -c:a aac \
                 -b:a 96k \
                 -ar 44100 \
                 -f flv \
                 "rtmps://live-api-s.facebook.com:443/rtmp/$KEY"
+
+                echo "⚠️ Stream $((i+1)) Restarting in 5s..."
 
                 sleep 5
 
@@ -99,7 +113,9 @@ jobs:
 
           done
 
+          echo "========================================"
           echo "🔥 ALL STREAMS RUNNING"
+          echo "========================================"
 
           while true
           do
