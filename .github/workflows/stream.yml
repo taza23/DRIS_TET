@@ -1,4 +1,4 @@
-name: 🚀 FB Multi Stream PRO MAX
+name: 🚀 FB Multi Stream PRO MAX ULTRA 20+
 
 on:
   workflow_dispatch:
@@ -11,89 +11,89 @@ on:
         description: 'مفاتيح البث - فرق بينهم بـ ,'
         required: true
 
-      WATERMARK_TEXT:
-        description: 'نص العلامة المائية'
-        required: true
-        default: 'CHAFIK GHADDAR TV'
-
 jobs:
-  multi-broadcast:
+  ultra-stream:
     runs-on: ubuntu-latest
+    timeout-minutes: 360
 
     steps:
       - name: ⚡ Install FFmpeg
         run: |
-          sudo apt-get update
-          sudo apt-get install -y ffmpeg
+          sudo apt update
+          sudo apt install -y ffmpeg
 
-      - name: 🚀 Start Multi Streaming
+      - name: 🚀 Start Ultra Streams
         shell: bash
         run: |
-          echo "=============================="
-          echo "🚀 STARTING MULTI STREAM..."
-          echo "=============================="
 
-          # إزالة المسافات + الأسطر الفارغة
-          CLEAN_SOURCES=$(echo "${{ github.event.inputs.SOURCE_LINKS }}" | tr -d '\n' | sed 's/ *, */,/g')
-          CLEAN_KEYS=$(echo "${{ github.event.inputs.FB_STREAM_KEYS }}" | tr -d '\n' | sed 's/ *, */,/g')
+          echo "===================================="
+          echo "🚀 STARTING 20+ STREAM ENGINE"
+          echo "===================================="
 
-          IFS=',' read -ra SOURCES <<< "$CLEAN_SOURCES"
-          IFS=',' read -ra KEYS <<< "$CLEAN_KEYS"
+          mkdir -p logs
 
-          COUNT_SOURCES=${#SOURCES[@]}
-          COUNT_KEYS=${#KEYS[@]}
+          IFS=',' read -ra SOURCES <<< "${{ github.event.inputs.SOURCE_LINKS }}"
+          IFS=',' read -ra KEYS <<< "${{ github.event.inputs.FB_STREAM_KEYS }}"
 
-          echo "عدد الروابط: $COUNT_SOURCES"
-          echo "عدد المفاتيح: $COUNT_KEYS"
+          TOTAL_SOURCES=${#SOURCES[@]}
+          TOTAL_KEYS=${#KEYS[@]}
 
-          if [ "$COUNT_SOURCES" -ne "$COUNT_KEYS" ]; then
-            echo "❌ عدد الروابط وعدد المفاتيح غير متساوي"
+          if [ "$TOTAL_SOURCES" -ne "$TOTAL_KEYS" ]; then
+            echo "❌ SOURCES COUNT != KEYS COUNT"
             exit 1
           fi
 
-          # رفع حدود العمليات
-          ulimit -u 4096
-          ulimit -n 100000
-
-          for (( i=0; i<$COUNT_SOURCES; i++ ))
+          for (( i=0; i<$TOTAL_SOURCES; i++ ))
           do
-            SOURCE="${SOURCES[$i]}"
-            KEY="${KEYS[$i]}"
 
-            echo "▶️ Launch Stream $((i+1))"
+            SOURCE=$(echo "${SOURCES[$i]}" | xargs)
+            KEY=$(echo "${KEYS[$i]}" | xargs)
 
-            nohup ffmpeg \
-              -hide_banner \
-              -loglevel warning \
-              -reconnect 1 \
-              -reconnect_streamed 1 \
-              -reconnect_delay_max 10 \
-              -thread_queue_size 8192 \
-              -i "$SOURCE" \
-              -vf "drawtext=text='${{ github.event.inputs.WATERMARK_TEXT }}':fontcolor=white:fontsize=36:borderw=2:bordercolor=black:box=1:boxcolor=black@0.4:x=w-mod(t*100\,w+tw):y=h-th-25" \
-              -map 0:v:0 \
-              -map 0:a? \
-              -c:v libx264 \
-              -preset veryfast \
-              -tune zerolatency \
-              -pix_fmt yuv420p \
-              -profile:v main \
-              -r 30 \
-              -g 60 \
-              -keyint_min 60 \
-              -sc_threshold 0 \
-              -b:v 3000k \
-              -maxrate 3000k \
-              -bufsize 6000k \
-              -c:a aac \
-              -b:a 128k \
-              -ar 44100 \
-              -f flv \
-              "rtmps://live-api-s.facebook.com:443/rtmp/$KEY" \
-              > stream_$i.log 2>&1 &
+            echo "▶️ Launching Stream $((i+1))"
 
-            echo "✅ Stream $((i+1)) Started"
+            (
+              while true
+              do
+
+                ffmpeg \
+                -hide_banner \
+                -nostats \
+                -loglevel warning \
+                -fflags +genpts+discardcorrupt \
+                -flags low_delay \
+                -strict experimental \
+                -err_detect ignore_err \
+                -reconnect 1 \
+                -reconnect_streamed 1 \
+                -reconnect_at_eof 1 \
+                -reconnect_delay_max 10 \
+                -rw_timeout 15000000 \
+                -thread_queue_size 8192 \
+                -threads 1 \
+                -i "$SOURCE" \
+                -map 0:v:0 \
+                -map 0:a? \
+                -c:v copy \
+                -c:a copy \
+                -f flv \
+                "rtmps://live-api-s.facebook.com:443/rtmp/$KEY"
+
+                echo "⚠️ Stream $((i+1)) Restarting..."
+
+                sleep 5
+
+              done
+            ) > logs/stream_$i.log 2>&1 &
+
+            sleep 1
+
           done
 
-          echo "🔥 ALL STREAMS RUNNING"
-          tail -f /dev/null
+          echo "===================================="
+          echo "🔥 ALL STREAMS STARTED"
+          echo "===================================="
+
+          while true
+          do
+            sleep 60
+          done
