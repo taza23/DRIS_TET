@@ -1,18 +1,23 @@
-name: 🚀 FB Multi Stream PRO MAX ULTRA 20+
+name: 🚀 FB STREAM STABLE PRO
 
 on:
   workflow_dispatch:
     inputs:
       SOURCE_LINKS:
-        description: 'روابط البث - فرق بينهم بـ ,'
+        description: 'روابط البث'
         required: true
 
       FB_STREAM_KEYS:
-        description: 'مفاتيح البث - فرق بينهم بـ ,'
+        description: 'مفاتيح البث'
         required: true
 
+      WATERMARK_TEXT:
+        description: 'العلامة المائية'
+        required: true
+        default: 'CHAFIK GHADDAR TV'
+
 jobs:
-  ultra-stream:
+  broadcast:
     runs-on: ubuntu-latest
     timeout-minutes: 360
 
@@ -22,13 +27,9 @@ jobs:
           sudo apt update
           sudo apt install -y ffmpeg
 
-      - name: 🚀 Start Ultra Streams
+      - name: 🚀 Start Stable Streams
         shell: bash
         run: |
-
-          echo "===================================="
-          echo "🚀 STARTING 20+ STREAM ENGINE"
-          echo "===================================="
 
           mkdir -p logs
 
@@ -39,7 +40,7 @@ jobs:
           TOTAL_KEYS=${#KEYS[@]}
 
           if [ "$TOTAL_SOURCES" -ne "$TOTAL_KEYS" ]; then
-            echo "❌ SOURCES COUNT != KEYS COUNT"
+            echo "ERROR"
             exit 1
           fi
 
@@ -48,8 +49,6 @@ jobs:
 
             SOURCE=$(echo "${SOURCES[$i]}" | xargs)
             KEY=$(echo "${KEYS[$i]}" | xargs)
-
-            echo "▶️ Launching Stream $((i+1))"
 
             (
               while true
@@ -61,37 +60,46 @@ jobs:
                 -loglevel warning \
                 -fflags +genpts+discardcorrupt \
                 -flags low_delay \
-                -strict experimental \
                 -err_detect ignore_err \
                 -reconnect 1 \
                 -reconnect_streamed 1 \
                 -reconnect_at_eof 1 \
                 -reconnect_delay_max 10 \
                 -rw_timeout 15000000 \
-                -thread_queue_size 8192 \
+                -thread_queue_size 4096 \
                 -threads 1 \
                 -i "$SOURCE" \
+                -vf "drawtext=text='${{ github.event.inputs.WATERMARK_TEXT }}':fontcolor=white:fontsize=18:borderw=1:bordercolor=black:box=1:boxcolor=black@0.25:x=10:y=10" \
                 -map 0:v:0 \
                 -map 0:a? \
-                -c:v copy \
-                -c:a copy \
+                -c:v libx264 \
+                -preset ultrafast \
+                -tune zerolatency \
+                -pix_fmt yuv420p \
+                -r 24 \
+                -g 48 \
+                -keyint_min 48 \
+                -sc_threshold 0 \
+                -b:v 1200k \
+                -maxrate 1200k \
+                -bufsize 2400k \
+                -s 854x480 \
+                -c:a aac \
+                -b:a 96k \
+                -ar 44100 \
                 -f flv \
                 "rtmps://live-api-s.facebook.com:443/rtmp/$KEY"
-
-                echo "⚠️ Stream $((i+1)) Restarting..."
 
                 sleep 5
 
               done
             ) > logs/stream_$i.log 2>&1 &
 
-            sleep 1
+            sleep 2
 
           done
 
-          echo "===================================="
-          echo "🔥 ALL STREAMS STARTED"
-          echo "===================================="
+          echo "🔥 ALL STREAMS RUNNING"
 
           while true
           do
