@@ -1,0 +1,127 @@
+name: 🚀 FB Multi Stream PRO MAX
+
+permissions:
+  contents: read
+  actions: write
+
+on:
+  workflow_dispatch:
+    inputs:
+      SOURCE_LINKS:
+        description: "روابط البث - فرق بينهم بـ ,"
+        required: true
+
+      FB_STREAM_KEYS:
+        description: "مفاتيح البث - فرق بينهم بـ ,"
+        required: true
+
+      WATERMARK_TEXT:
+        description: "نص العلامة المائية"
+        required: true
+        default: "CHAFIK GHADDAR TV"
+
+jobs:
+  multi-broadcast:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      - name: ⚡ Install FFmpeg
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y ffmpeg fonts-dejavu-core
+
+      - name: 🚀 Start Multi Streaming
+        shell: bash
+        run: |
+          set -e
+
+          echo "======================================="
+          echo "🚀 FB MULTI STREAM PRO MAX STARTING..."
+          echo "======================================="
+
+          IFS=',' read -ra SOURCES <<< "${{ github.event.inputs.SOURCE_LINKS }}"
+          IFS=',' read -ra KEYS <<< "${{ github.event.inputs.FB_STREAM_KEYS }}"
+
+          COUNT_SOURCES=${#SOURCES[@]}
+          COUNT_KEYS=${#KEYS[@]}
+
+          echo "📡 SOURCES : $COUNT_SOURCES"
+          echo "🔑 KEYS    : $COUNT_KEYS"
+
+          if [ "$COUNT_SOURCES" -eq 0 ]; then
+            echo "❌ لا توجد روابط بث"
+            exit 1
+          fi
+
+          if [ "$COUNT_SOURCES" -ne "$COUNT_KEYS" ]; then
+            echo "❌ عدد الروابط لا يساوي عدد المفاتيح"
+            exit 1
+          fi
+
+          mkdir -p logs
+
+          for (( i=0; i<COUNT_SOURCES; i++ ))
+          do
+            SOURCE=$(echo "${SOURCES[$i]}" | xargs)
+            KEY=$(echo "${KEYS[$i]}" | xargs)
+
+            echo "======================================="
+            echo "▶️ STARTING STREAM $((i+1))"
+            echo "📡 SOURCE : $SOURCE"
+            echo "======================================="
+
+            nohup ffmpeg \
+              -hide_banner \
+              -loglevel warning \
+              -stats \
+              -fflags +genpts+discardcorrupt \
+              -avoid_negative_ts make_zero \
+              -reconnect 1 \
+              -reconnect_streamed 1 \
+              -reconnect_at_eof 1 \
+              -reconnect_delay_max 10 \
+              -rw_timeout 15000000 \
+              -thread_queue_size 8192 \
+              -i "$SOURCE" \
+              -vf "drawtext=fontfile=/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf:text='${{ github.event.inputs.WATERMARK_TEXT }}':fontcolor=white:fontsize=34:borderw=3:bordercolor=black:box=1:boxcolor=black@0.35:x=w-mod(t*90\\,w+tw):y=h-th-30" \
+              -map 0:v:0 \
+              -map 0:a? \
+              -c:v libx264 \
+              -preset veryfast \
+              -tune zerolatency \
+              -pix_fmt yuv420p \
+              -profile:v high \
+              -level 4.1 \
+              -r 30 \
+              -g 60 \
+              -keyint_min 60 \
+              -sc_threshold 0 \
+              -b:v 3500k \
+              -maxrate 3500k \
+              -bufsize 7000k \
+              -c:a aac \
+              -b:a 128k \
+              -ar 44100 \
+              -ac 2 \
+              -f flv \
+              "rtmps://live-api-s.facebook.com:443/rtmp/$KEY" \
+              > logs/stream_$i.log 2>&1 &
+
+            sleep 5
+
+            echo "✅ STREAM $((i+1)) STARTED"
+          done
+
+          echo "======================================="
+          echo "🔥 ALL STREAMS ARE RUNNING"
+          echo "======================================="
+
+          while true
+          do
+            echo "🟢 STREAM ENGINE ACTIVE : $(date)"
+            sleep 60
+          done
