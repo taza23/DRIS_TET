@@ -70,9 +70,9 @@ jobs:
             -g 60 \
             -keyint_min 60 \
             -sc_threshold 0 \
-            -b:v 3000k \
-            -maxrate 3000k \
-            -bufsize 6000k \
+            -b:v 2500k \
+            -maxrate 2500k \
+            -bufsize 5000k \
             -c:a aac \
             -b:a 128k \
             -ar 44100 \
