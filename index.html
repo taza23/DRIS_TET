@@ -1,719 +1,136 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>الورشة الوطنية للصوت والصورة</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <meta charset="UTF-8" />
+  <title>نادي الروبوتيك</title>
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
     body {
-      font-family: 'Cairo', sans-serif;
-      background-color: #fafcff;
-      color: #1a2639;
-      line-height: 1.6;
-      scroll-behavior: smooth;
-    }
-
-    ::-webkit-scrollbar {
-      width: 10px;
-    }
-    ::-webkit-scrollbar-track {
-      background: #eef5ff;
-    }
-    ::-webkit-scrollbar-thumb {
-      background: #c9a44b;
-      border-radius: 8px;
-    }
-    ::-webkit-scrollbar-thumb:hover {
-      background: #b48a32;
-    }
-
-    .container {
-      width: 90%;
-      max-width: 1300px;
-      margin: 0 auto;
-      padding: 0 15px;
-    }
-
-    header {
-      background-color: rgba(10, 25, 47, 0.98);
-      backdrop-filter: blur(12px);
-      position: sticky;
-      top: 0;
-      z-index: 1000;
-      border-bottom: 2px solid #d4af37;
-    }
-
-    .header-content {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      height: 85px;
-    }
-
-    .logo h2 {
-      font-size: 2rem;
-      font-weight: 800;
-      background: linear-gradient(145deg, #f5e7c8, #d4af37);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-      letter-spacing: -0.5px;
-    }
-    .logo span {
-      font-size: 0.9rem;
-      display: block;
-      color: #b8c7e3;
-      font-weight: 300;
-      letter-spacing: 0.5px;
-    }
-
-    .nav-menu {
-      display: flex;
-      gap: 2.5rem;
-      list-style: none;
-    }
-    .nav-menu a {
-      text-decoration: none;
-      font-weight: 600;
-      color: #edf2fb;
-      font-size: 1.15rem;
-      transition: 0.2s;
-      position: relative;
-      padding: 0.3rem 0;
-    }
-    .nav-menu a:hover {
-      color: #e4c580;
-    }
-    .nav-menu a::after {
-      content: '';
-      position: absolute;
-      bottom: -5px;
-      left: 0;
-      width: 0%;
-      height: 2px;
-      background: #d4af37;
-      transition: 0.3s;
-    }
-    .nav-menu a:hover::after {
-      width: 100%;
-    }
-
-    .menu-toggle {
-      display: none;
-      background: none;
-      border: none;
-      font-size: 2rem;
-      color: #edf2fb;
-      cursor: pointer;
-    }
-
-    section {
-      padding: 90px 0;
-    }
-
-    .section-title {
-      text-align: center;
-      margin-bottom: 60px;
-    }
-    .section-title h2 {
-      font-size: 2.8rem;
-      font-weight: 700;
-      color: #0a192f;
-      position: relative;
-      display: inline-block;
-      padding-bottom: 18px;
-    }
-    .section-title h2::after {
-      content: '';
-      position: absolute;
-      bottom: 0;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 100px;
-      height: 4px;
-      background: linear-gradient(90deg, #d4af37, #b48a32);
-      border-radius: 4px;
-    }
-    .section-title p {
-      color: #3a4a66;
-      font-size: 1.3rem;
-      margin-top: 18px;
-    }
-
-    .hero {
-      background: linear-gradient(165deg, #ffffff 0%, #eef5ff 100%);
-      padding: 70px 0;
-      border-bottom: 3px solid #d4af37;
-      position: relative;
-      overflow: hidden;
-    }
-    .hero::before {
-      content: "";
-      position: absolute;
-      top: -30%;
-      right: -10%;
-      width: 400px;
-      height: 400px;
-      background: radial-gradient(circle, rgba(212,175,55,0.1) 0%, transparent 70%);
-      border-radius: 50%;
-    }
-    .hero-content {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      gap: 40px;
-      position: relative;
-      z-index: 2;
-    }
-    .hero-text {
-      flex: 1 1 450px;
-    }
-    .hero-text h1 {
-      font-size: 3.5rem;
-      font-weight: 800;
-      color: #0a1a2f;
-      line-height: 1.2;
-      margin-bottom: 20px;
-    }
-    .hero-text h1 span {
-      background: linear-gradient(145deg, #b48a32, #d4af37);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-    .hero-text p {
-      font-size: 1.4rem;
-      color: #2c3e5c;
-      margin-bottom: 30px;
-      max-width: 600px;
-    }
-    .hero-badge {
-      display: flex;
-      gap: 15px;
-      flex-wrap: wrap;
-    }
-    .badge-item {
-      background: rgba(255,255,255,0.7);
-      backdrop-filter: blur(5px);
-      padding: 10px 25px;
-      border-radius: 50px;
-      font-weight: 600;
-      color: #0a192f;
-      border: 1px solid #d4af37;
-      font-size: 1.1rem;
-      box-shadow: 0 6px 14px rgba(0,0,0,0.02);
-    }
-    .badge-item i {
-      color: #b48a32;
-      margin-left: 8px;
-    }
-    .hero-image {
-      flex: 1 1 400px;
-      background: url('https://placehold.co/700x450/d4af37/0a192f?text=الورشة+الوطنية') no-repeat center;
+      margin: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-image: url("a.png");
       background-size: cover;
-      min-height: 350px;
-      border-radius: 40px;
-      box-shadow: 0 30px 45px -15px #0a1f33;
-      transition: transform 0.4s;
-      border: 3px solid #d4af37;
-    }
-    .hero-image:hover {
-      transform: scale(1.02);
-    }
-
-    .news-ticker {
-      background: #0a192f;
-      color: #edf2fb;
-      padding: 15px 0;
-      border-top: 2px solid #d4af37;
-      border-bottom: 2px solid #d4af37;
-      margin-top: -3px;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.15);
-      position: relative;
-      z-index: 10;
-    }
-    .ticker-container {
+      background-position: center;
+      height: 100vh;
       display: flex;
+      flex-direction: column;
       align-items: center;
-      gap: 30px;
     }
-    .ticker-label {
-      background: #d4af37;
-      color: #0a192f;
-      padding: 10px 25px;
-      border-radius: 40px;
-      font-weight: 800;
-      font-size: 1.2rem;
-      white-space: nowrap;
-      box-shadow: 0 4px 10px rgba(212,175,55,0.4);
-    }
-    .ticker-label i {
-      margin-left: 8px;
-    }
-    .ticker-wrapper {
+    .custom-ticker {
+      width: 90%;
+      max-width: 800px;
+      margin: 40px auto 40px auto; 
+      background-color: rgba(0, 0, 0, 0.6);
+      color: white;
       overflow: hidden;
-      width: 100%;
-    }
-    .ticker-content {
-      display: flex;
-      animation: scrollTicker 25s linear infinite;
-      width: max-content;
-    }
-    .ticker-item {
-      display: flex;
-      align-items: center;
-      padding: 0 35px;
-      font-size: 1.2rem;
-      font-weight: 500;
-      white-space: nowrap;
-    }
-    .ticker-item i {
-      color: #d4af37;
-      margin-left: 10px;
-      font-size: 1.3rem;
-    }
-    @keyframes scrollTicker {
-      0% { transform: translateX(0); }
-      100% { transform: translateX(-50%); }
-    }
-
-    .services-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
-      gap: 35px;
-      margin-top: 20px;
-    }
-    .service-card {
-      background: white;
-      border-radius: 30px;
-      padding: 40px 25px;
-      box-shadow: 0 20px 30px -10px rgba(10,25,47,0.1);
-      transition: all 0.3s ease;
-      border: 1px solid #eaeef5;
+      border-radius: 10px;
+      padding: 10px 0;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+      font-size: 18px;
+      font-weight: bold;
       text-align: center;
-      backdrop-filter: blur(5px);
+      direction: rtl;
     }
-    .service-card:hover {
-      transform: translateY(-12px);
-      box-shadow: 0 35px 50px -15px #0a192f;
-      border-color: #d4af37;
-    }
-    .service-icon {
-      width: 90px;
-      height: 90px;
-      background: linear-gradient(135deg, #f9f3e0, #ffffff);
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin: 0 auto 25px;
-      font-size: 2.7rem;
-      color: #b48a32;
-      border: 2px solid #d4af37;
-      box-shadow: 0 12px 20px -8px #c9a44b80;
-    }
-    .service-card h3 {
-      font-size: 2rem;
-      font-weight: 700;
-      margin-bottom: 15px;
-      color: #0a192f;
-    }
-    .service-card p {
-      color: #2d4059;
-      font-size: 1.05rem;
-      line-height: 1.7;
-    }
-
-    .about {
-      background-color: white;
-      border-top: 3px solid #f0e4cc;
-      border-bottom: 3px solid #f0e4cc;
-    }
-    .about-wrapper {
-      display: flex;
-      gap: 60px;
-      align-items: center;
-      flex-wrap: wrap;
-    }
-    .about-image {
-      flex: 1 1 350px;
-      background: linear-gradient(145deg, #0a192f, #1e3a5f);
-      border-radius: 50px;
-      min-height: 350px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #d4af37;
-      font-size: 2.2rem;
-      font-weight: 700;
-      box-shadow: 0 30px 45px -15px #0a1a33;
-      border: 3px solid #d4af37;
-    }
-    .about-text {
-      flex: 2 1 500px;
-    }
-    .about-text h3 {
-      font-size: 2.5rem;
-      margin-bottom: 25px;
-      color: #0a192f;
-    }
-    .about-text p {
-      font-size: 1.2rem;
-      color: #2d3e5c;
-      margin-bottom: 25px;
-    }
-    .stats {
-      display: flex;
-      gap: 40px;
-      margin-top: 35px;
-    }
-    .stat-item {
-      text-align: center;
-    }
-    .stat-number {
-      font-size: 3rem;
-      font-weight: 800;
-      color: #d4af37;
-    }
-    .stat-label {
-      color: #4d5f78;
-      font-weight: 600;
-    }
-
-    .contact {
-      background: #f2f7fd;
-    }
-    .contact-container {
-      display: flex;
-      gap: 50px;
-      flex-wrap: wrap;
-    }
-    .contact-info {
-      flex: 1 1 320px;
-    }
-    .contact-item {
-      display: flex;
-      align-items: center;
-      gap: 20px;
-      margin-bottom: 30px;
-      background: white;
-      padding: 18px 30px;
-      border-radius: 70px;
-      box-shadow: 0 8px 18px rgba(10,25,47,0.05);
-      border: 1px solid #d4af37;
-    }
-    .contact-item i {
-      font-size: 2rem;
-      color: #b48a32;
-      width: 45px;
-    }
-    .contact-item p {
-      font-size: 1.25rem;
-      font-weight: 500;
-      color: #0a192f;
-    }
-    .contact-form {
-      flex: 2 1 400px;
-      background: white;
-      padding: 45px;
-      border-radius: 50px;
-      box-shadow: 0 25px 40px -15px #0a192f1a;
-      border: 2px solid #d4af37;
-    }
-    .form-group {
-      margin-bottom: 25px;
-    }
-    input, textarea {
-      width: 100%;
-      padding: 18px 25px;
-      border: 2px solid #e2e9f2;
-      border-radius: 60px;
-      font-family: 'Cairo', sans-serif;
-      font-size: 1.1rem;
-      transition: 0.2s;
-      background: #fcfdff;
-    }
-    textarea {
-      border-radius: 40px;
-      resize: vertical;
-    }
-    input:focus, textarea:focus {
-      border-color: #d4af37;
-      outline: none;
-      box-shadow: 0 0 0 5px #f3e3c0;
-    }
-    .btn {
-      background: linear-gradient(90deg, #0a192f, #1e3a5f);
-      color: #d4af37;
-      border: 2px solid #d4af37;
-      padding: 18px 40px;
-      border-radius: 60px;
-      font-size: 1.3rem;
-      font-weight: 700;
-      cursor: pointer;
-      transition: 0.2s;
-      width: 100%;
-      box-shadow: 0 12px 25px -8px #0a192f;
-    }
-    .btn:hover {
-      background: #0a192f;
-      color: #f5d97a;
-      transform: scale(1.02);
-      border-color: #f5d97a;
-    }
-
-    footer {
-      background: #0a192f;
-      color: #cdddec;
-      text-align: center;
-      padding: 40px 0;
-      border-top: 5px solid #d4af37;
-    }
-    .footer-content p {
-      font-size: 1.15rem;
-    }
-    .social-links a {
-      color: #d4af37;
-      font-size: 1.9rem;
-      margin: 0 12px;
-      transition: 0.2s;
+    .custom-ticker-content {
       display: inline-block;
+      white-space: nowrap;
+      padding-left: 100%;
+      animation: scroll-left 15s linear infinite;
     }
-    .social-links a:hover {
-      transform: translateY(-6px);
-      color: #edf2fb;
-    }
-
-    @media (max-width: 992px) {
-      .hero-text h1 { font-size: 2.9rem; }
-      .section-title h2 { font-size: 2.5rem; }
-    }
-
-    @media (max-width: 768px) {
-      .menu-toggle {
-        display: block;
+    @keyframes scroll-left {
+      0% {
+        transform: translateX(0%);
       }
-      .nav-menu {
-        display: none;
-        flex-direction: column;
-        background: #0a192f;
-        position: absolute;
-        top: 85px;
-        right: 0;
-        width: 260px;
-        padding: 30px;
-        box-shadow: -8px 15px 30px rgba(0,0,0,0.3);
-        border-radius: 0 0 30px 30px;
-        gap: 1.5rem;
-        border-right: 4px solid #d4af37;
+      100% {
+        transform: translateX(-100%);
       }
-      .nav-menu.active {
-        display: flex;
-      }
-      .hero-content { flex-direction: column; }
-      .hero-text { text-align: center; }
-      .hero-badge { justify-content: center; }
-      .about-wrapper { flex-direction: column; }
-      .stats { justify-content: center; }
-      .ticker-container { flex-direction: column; align-items: flex-start; gap: 12px; }
     }
-
-    @media (max-width: 480px) {
-      .service-card { padding: 30px 15px; }
-      .hero-text h1 { font-size: 2.4rem; }
-      .section-title h2 { font-size: 2rem; }
+    .buttons-container {
+      margin-top: 50px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 20px;
+      width: 90%;
+      max-width: 800px;
+    }
+    .robotic-button {
+      background-color: rgba(255, 255, 255, 0.6);
+      backdrop-filter: blur(8px);
+      border: none;
+      border-radius: 15px;
+      padding: 20px;
+      text-align: center;
+      cursor: pointer;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+      transition: transform 0.2s, background-color 0.3s;
+      text-decoration: none;
+      color: #222;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      font-weight: bold;
+    }
+    .robotic-button:hover {
+      transform: scale(1.05);
+      background-color: rgba(255, 255, 255, 0.8);
+    }
+    .robotic-button svg {
+      width: 40px;
+      height: 40px;
+      margin-bottom: 10px;
+      fill: #0022aa;
+    }
+    .floating-button {
+      position: fixed;
+      bottom: 20px;
+      left: 20px;
+      background-color: #00aaff;
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 60px;
+      height: 60px;
+      font-size: 24px;
+      cursor: pointer;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+      transition: background-color 0.3s ease;
+    }
+    .floating-button:hover {
+      background-color: #0088cc;
+    }
+    #a{ 
+      width: 200px;
+      height: 100px;
     }
   </style>
 </head>
 <body>
-  <header>
-    <div class="container header-content">
-      <div class="logo">
-        <h2>🎬 الورشة الوطنية للصوت والصورة</h2>
-        <span>الهيئة العامة للإنتاج الإعلامي</span>
-      </div>
-      <button class="menu-toggle" id="menuToggle" aria-label="القائمة">
-        <i class="fas fa-bars"></i>
-      </button>
-      <ul class="nav-menu" id="navMenu">
-        <li><a href="#home">الرئيسية</a></li>
-        <li><a href="#services">الخدمات</a></li>
-        <li><a href="#about">عن الورشة</a></li>
-        <li><a href="#contact">اتصل بنا</a></li>
-      </ul>
-    </div>
-  </header>
-
-  <section class="hero" id="home">
-    <div class="container hero-content">
-      <div class="hero-text">
-        <h1>الورشة <span>الوطنية</span> للصورة والصوت</h1>
-        <p>الكفاءة الوطنية في خدمة الإعلام والابتكار الرقمي</p>
-        <div class="hero-badge">
-          <span class="badge-item"><i class="fas fa-camera"></i> تصوير</span>
-          <span class="badge-item"><i class="fas fa-microphone-alt"></i> صوت</span>
-          <span class="badge-item"><i class="fas fa-robot"></i> ذكاء اصطناعي</span>
-          <span class="badge-item"><i class="fas fa-video"></i> مونتاج</span>
-          <span class="badge-item"><i class="fas fa-paint-brush"></i> ديزاين</span>
-          <span class="badge-item"><i class="fas fa-film"></i> رسوم متحركة</span>
-        </div>
-      </div>
-      <div class="hero-image" title="الورشة الوطنية"></div>
-    </div>
-  </section>
-
-  <div class="news-ticker">
-    <div class="container ticker-container">
-      <span class="ticker-label"><i class="fas fa-newspaper"></i> آخر الأخبار</span>
-      <div class="ticker-wrapper">
-        <div class="ticker-content">
-          <div class="ticker-item"><i class="fas fa-circle"></i> افتتاح قسم الذكاء الاصطناعي المتقدم</div>
-          <div class="ticker-item"><i class="fas fa-circle"></i> تجهيز استوديو 4K فائق الدقة</div>
-          <div class="ticker-item"><i class="fas fa-circle"></i> شراكة استراتيجية مع مؤسسات الدولة</div>
-          <div class="ticker-item"><i class="fas fa-circle"></i> تدريب مجاني في المونتاج السينمائي</div>
-          <div class="ticker-item"><i class="fas fa-circle"></i> إطلاق منصة التدريب عن بعد</div>
-          <div class="ticker-item"><i class="fas fa-circle"></i> افتتاح قسم الذكاء الاصطناعي المتقدم</div>
-          <div class="ticker-item"><i class="fas fa-circle"></i> تجهيز استوديو 4K فائق الدقة</div>
-          <div class="ticker-item"><i class="fas fa-circle"></i> شراكة استراتيجية مع مؤسسات الدولة</div>
-          <div class="ticker-item"><i class="fas fa-circle"></i> تدريب مجاني في المونتاج السينمائي</div>
-          <div class="ticker-item"><i class="fas fa-circle"></i> إطلاق منصة التدريب عن بعد</div>
-        </div>
-      </div>
+  <center><img src="ج.png" alt="" id="a"></center>
+  <div class="custom-ticker">
+    <div class="custom-ticker-content">
+ستاد خصنة نربحو العام جيا إنشاء الله 💪 واش متفقين؟
     </div>
   </div>
-
-  <section id="services">
-    <div class="container">
-      <div class="section-title">
-        <h2>خدماتنا المتكاملة</h2>
-        <p>نقدم حلولاً إعلامية احترافية بكفاءات وطنية</p>
-      </div>
-      <div class="services-grid">
-        <div class="service-card">
-          <div class="service-icon"><i class="fas fa-camera-retro"></i></div>
-          <h3>تصوير</h3>
-          <p>تصوير سينمائي وإعلاني بأحدث الكاميرات وأنظمة الإضاءة، وإخراج حسب المواصفات الرسمية.</p>
-        </div>
-        <div class="service-card">
-          <div class="service-icon"><i class="fas fa-headphones"></i></div>
-          <h3>هندسة صوت</h3>
-          <p>تسجيل، مكساج، ماسترينغ، وتنقية الصوت بالذكاء الاصطناعي لجودة استثنائية.</p>
-        </div>
-        <div class="service-card">
-          <div class="service-icon"><i class="fas fa-brain"></i></div>
-          <h3>ذكاء اصطناعي</h3>
-          <p>توليد الصور، تحسين الفيديو، الترجمة الفورية، ومعالجة المحتوى بتقنيات AI.</p>
-        </div>
-        <div class="service-card">
-          <div class="service-icon"><i class="fas fa-film"></i></div>
-          <h3>مونتاج فيديو</h3>
-          <p>تركيب، مونتاج إبداعي، غرافيك موشن، تلوين، ومؤثرات بصرية VFX.</p>
-        </div>
-        <div class="service-card">
-          <div class="service-icon"><i class="fas fa-pen-nib"></i></div>
-          <h3>ديزاين جرافيك</h3>
-          <p>تصميم الهويات البصرية، البراندينغ، المطبوعات، والموشن جرافيك.</p>
-        </div>
-        <div class="service-card">
-          <div class="service-icon"><i class="fas fa-dragon"></i></div>
-          <h3>رسوم متحركة</h3>
-          <p>أنيميشن ثنائي وثلاثي الأبعاد، ستوب موشن، ورسوم توضيحية متحركة.</p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <section class="about" id="about">
-    <div class="container about-wrapper">
-      <div class="about-image">
-        <i class="fas fa-flag" style="font-size:6rem; opacity:0.8;"></i>
-      </div>
-      <div class="about-text">
-        <h3>الهيئة العامة للإنتاج الإعلامي</h3>
-        <p>الورشة الوطنية للصوت والصورة هي كيان حكومي رائد يضم نخبة من المهندسين والفنانين المتخصصين. نقدم حلولاً متكاملة في مجالات التصوير والصوت والمونتاج والذكاء الاصطناعي، ونسهم في تطوير المحتوى الإعلامي الوطني بأعلى معايير الجودة.</p>
-    
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <section class="contact" id="contact">
-    <div class="container">
-      <div class="section-title">
-        <h2>تواصل مع الهيئة</h2>
-        <p>للاستفسارات والمشاريع الوطنية</p>
-      </div>
-      <div class="contact-container">
-        <div class="contact-info">
-          <div class="contact-item">
-            <i class="fas fa-phone-alt"></i>
-            <p>+212 5 22 00 11 22</p>
-          </div>
-          <div class="contact-item">
-            <i class="fas fa-envelope"></i>
-            <p>info@wersha.gov.ma</p>
-          </div>
-          <div class="contact-item">
-            <i class="fas fa-map-marker-alt"></i>
-            <p>الرباط - شارع محمد السادس، المقر الرئيسي</p>
-          </div>
-        </div>
-        
-          </form>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <footer>
-    <div class="container footer-content">
-      <p>© 2025 الورشة الوطنية للصوت والصورة - جميع الحقوق محفوظة. تابع لهيئة الإعلام الوطني.</p>
-      <div class="social-links">
-        <a href="#"><i class="fab fa-facebook-f"></i></a>
-        <a href="#"><i class="fab fa-instagram"></i></a>
-        <a href="#"><i class="fab fa-youtube"></i></a>
-        <a href="#"><i class="fab fa-linkedin-in"></i></a>
-        <a href="#"><i class="fab fa-behance"></i></a>
-      </div>
-    </div>
-  </footer>
-
-  <script>
-    (function() {
-      const toggleBtn = document.getElementById('menuToggle');
-      const navMenu = document.getElementById('navMenu');
-
-      if (toggleBtn && navMenu) {
-        toggleBtn.addEventListener('click', function() {
-          navMenu.classList.toggle('active');
-        });
-
-        navMenu.querySelectorAll('a').forEach(link => {
-          link.addEventListener('click', () => {
-            navMenu.classList.remove('active');
-          });
-        });
-      }
-
-      const form = document.getElementById('quickForm');
-      if (form) {
-        form.addEventListener('submit', (e) => {
-          e.preventDefault();
-          alert('تم استلام رسالتك، سيتم التواصل معكم من قبل الجهة المختصة.');
-          form.reset();
-        });
-      }
-    })();
-  </script>
+  <div class="buttons-container">
+    <a href="أنشطة النادي العلمي والتكنولوجي.html" class="robotic-button">
+      <svg viewBox="0 0 24 24"><path d="M3 13h2v-2H3v2zm4 0h14v-2H7v2zm0 4h14v-2H7v2zM3 17h2v-2H3v2zM3 9h2V7H3v2zm4 0h14V7H7v2z"/></svg>
+      نادي علمي وتكنولوجي
+    </a>
+    <a href="ورشات الروبوتيك والمعلوميات بمؤسسة تفتح الفني بتازة خطوة نحو الابتكار والتكنولوجيا" class="robotic-button">
+      <svg viewBox="0 0 24 24"><path d="M20 8h-3V4H7v4H4l8 8 8-8zM4 18v2h16v-2H4z"/></svg>
+      الورشات
+    </a>
+    <a href="تصميم موقع إلكتروني خاص بمؤسسة تفتح الفني بتازة مبادرة رقمية من إبداع تلميذي" class="robotic-button">
+      <svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+      أنشطة موازية
+    </a>
+    <a href="مشاريع تقنية مبتكرة في الروبوتيك والمعلوميات بمؤسسة تفتح الفني بتازة" class="robotic-button">
+      <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4S14.21 4 12 4 8 5.79 8 8s1.79 4 4 4zm-8 8v-1c0-2.21 3.58-4 8-4s8 1.79 8 4v1H4z"/></svg>
+      أعمال خاصة
+    </a>
+    <a href="ورشات الروبوتيك والمعلوميات بمؤسسة تفتح الفني بتازة خطوة نحو الابتكار والتكنولوجيا" class="robotic-button">
+      <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+      مشاريع تقنية
+    </a>
+  </div>
 </body>
 </html>
